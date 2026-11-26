@@ -6,6 +6,8 @@ import type { HousingType } from '@/db/types';
 import { BackHeader } from '@/components/BackHeader';
 import { Field, TextInput, inputCls } from '@/components/Field';
 import { Loading } from '@/components/EmptyState';
+import { WhatsNewSheet } from '@/components/WhatsNewSheet';
+import { LATEST } from '@/data/releases';
 import { useToast } from '@/components/Toast';
 
 const TYPES: HousingType[] = ['아파트', '빌라', '주택', '오피스텔', '기타'];
@@ -21,6 +23,7 @@ export function HouseSettings() {
   const [built, setBuilt] = useState('');
   const [rooms, setRooms] = useState<string[]>([]);
   const [newRoom, setNewRoom] = useState('');
+  const [notes, setNotes] = useState(false);
 
   useEffect(() => {
     if (!house) return;
@@ -75,7 +78,15 @@ export function HouseSettings() {
           <p className="mt-2 text-xs text-ink-sub">공간을 지워도 이미 등록한 자재는 그대로 유지돼요.</p>
         </div>
         <button className="btn-3d" onClick={save}>저장하기</button>
+        <div className="card-3d flex items-center justify-between p-4">
+          <div>
+            <div className="text-sm font-bold">앱 버전 {__APP_VERSION__}</div>
+            <div className="text-xs text-ink-sub">업데이트된 내용을 다시 볼 수 있어요</div>
+          </div>
+          <button className="btn-soft !px-4 !py-2 text-sm" onClick={() => setNotes(true)}>새로 바뀐 점</button>
+        </div>
       </div>
+      {notes && <WhatsNewSheet release={LATEST} onClose={() => setNotes(false)} />}
     </>
   );
 }

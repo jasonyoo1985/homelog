@@ -1,10 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { QuickAddSheet } from './QuickAddSheet';
+import { WhatsNewSheet } from './WhatsNewSheet';
+import { db } from '@/db/db';
+import { LATEST } from '@/data/releases';
+import { getSeen, markSeen, shouldShowRelease } from '@/lib/whatsnew';
 
 export function Layout() {
   const [sheet, setSheet] = useState(false);
+  const [notes, setNotes] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const hasData = (await db.materials.count()) + (await db.repairs.count()) + (await db.documents.count()) > 0;
+      const r = shouldShowRelease(getSeen(), LATEST.id, hasData);
+      if (r === 'silent') markSeen(LATEST.id);
+      if (r === 'show') setNotes(true);
+    })();
+  }, []);
+  const closeNotes = () => { markSeen(LATEST.id); setNotes(false); };
   return (
     <div className="mx-auto min-h-full max-w-[480px] bg-bg">
       <main className="px-4" style={{ paddingTop: 'calc(16px + var(--safe-top))', paddingBottom: 'calc(112px + var(--safe-bottom))' }}>
@@ -12,6 +26,7 @@ export function Layout() {
       </main>
       <BottomNav onQuickAdd={() => setSheet(true)} />
       <QuickAddSheet open={sheet} onClose={() => setSheet(false)} />
+      {notes && <WhatsNewSheet release={LATEST} onClose={closeNotes} />}
     </div>
   );
 }
