@@ -19,7 +19,7 @@ jobs:
       - name: Accept Android SDK licenses (SDK is preinstalled on runner)
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - name: Read app build number
-        run: echo "APP_BUILD=$(node -p \"require('./app-version.json').build\")" >> "$GITHUB_ENV"
+        run: echo "APP_BUILD=$(jq -r .build app-version.json)" >> "$GITHUB_ENV"
       - run: npm ci
       - run: npm test
       - run: npm run build
