@@ -22,7 +22,7 @@ export const KIND_LABEL: Record<NoteKind, string> = { new: '새로워요', bette
 /** 최신 안내가 맨 앞 */
 export const RELEASES: Release[] = [
   {
-    id: '2026-11-materials',
+    id: '2026-11-v0.1.11',
     title: '자재관리가 생겼어요',
     subtitle: '쓰던 대로 쓰셔도 돼요. 필요할 때 골라 쓰는 기능이에요.',
     items: [
@@ -40,6 +40,10 @@ export const RELEASES: Release[] = [
         emoji: '⏰', tone: 'amber', kind: 'new', title: '교체 시기를 챙겨 드려요',
         desc: "에어컨 필터, 도어락 건전지처럼 주기가 있는 건 '오늘 교체 완료'만 누르세요. 다음 날짜는 알아서 계산해요.",
         cta: { label: '교체 임박 보기', to: '/materials?status=due' },
+      },
+      {
+        emoji: '🔄', tone: 'blue', kind: 'better', title: '앱을 열면 알아서 업데이트돼요',
+        desc: '새 버전이 나오면 앱을 열 때 자동으로 받아서 적용해요. 따로 스토어에 들어가지 않아도 돼요.',
       },
       {
         emoji: '🛠️', tone: 'rose', kind: 'fixed', title: '화면이 멈추던 문제를 고쳤어요',

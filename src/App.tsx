@@ -4,6 +4,9 @@ import { Layout } from '@/components/Layout';
 import { ToastProvider } from '@/components/Toast';
 import { Loading } from '@/components/EmptyState';
 import { ensureHouse } from '@/db/repo';
+import { checkForAppUpdate } from '@/lib/appUpdate';
+import { db } from '@/db/db';
+import { setReturningUser } from '@/lib/whatsnew';
 import { Home } from '@/pages/Home';
 import { Materials } from '@/pages/Materials';
 import { MaterialForm } from '@/pages/MaterialForm';
@@ -14,7 +17,15 @@ import { Docs } from '@/pages/Docs';
 
 export default function App() {
   const [ready, setReady] = useState(false);
-  useEffect(() => { ensureHouse().finally(() => setReady(true)); }, []);
+  useEffect(() => {
+    (async () => {
+      // 집 프로필을 만들기 전에 '이전에 실행한 적 있는 기기'인지 기록 (업데이트 안내 판단용)
+      try { setReturningUser((await db.houses.count()) > 0); } catch { /* 무시 */ }
+      await ensureHouse().catch(() => undefined);
+      setReady(true);
+    })();
+  }, []);
+  useEffect(() => { void checkForAppUpdate(); }, []);
   if (!ready) return <Loading />;
   // Capacitor(file://) 환경에서도 새로고침이 깨지지 않도록 HashRouter 사용
   return (
