@@ -12,6 +12,7 @@ import { EmptyState, Loading } from '@/components/EmptyState';
 import { PhotoImg } from '@/components/Photo';
 import { Icon } from '@/components/Icon';
 import { inputCls } from '@/components/Field';
+import { useToast } from '@/components/Toast';
 
 type StatusFilter = 'all' | 'need' | 'UNKNOWN' | 'PARTIAL' | 'VERIFIED' | 'due';
 const STATUS_CHIPS: { key: StatusFilter; label: string }[] = [
@@ -40,6 +41,9 @@ export function Materials() {
 
   const items = useLiveQuery(() => listMaterials(), []);
   const house = useLiveQuery(() => db.houses.toCollection().first(), []);
+  const toast = useToast();
+  const [pick, setPick] = useState(false);
+  const [sel, setSel] = useState<Set<string>>(new Set());
 
   const setParam = (k: string, v: string) => {
     const n = new URLSearchParams(sp);
@@ -62,6 +66,25 @@ export function Materials() {
 
   if (!items || !house) return <Loading />;
 
+  const toggle = (id: string) => setSel((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const exitPick = () => { setPick(false); setSel(new Set()); };
+  async function removeSelected() {
+    const ids = [...sel];
+    if (!ids.length) return;
+    if (!window.confirm(`선택한 ${ids.length}개를 지울까요? 사진과 메모도 함께 사라지고 되돌릴 수 없어요.`)) return;
+    await db.transaction('rw', db.materials, db.repairs, db.documents, async () => {
+      await db.materials.bulkDelete(ids);
+      // 연결돼 있던 수리 기록·문서는 남기되 자재 연결만 끊는다
+      for (const r of await db.repairs.where('materialId').anyOf(ids).toArray()) await db.repairs.update(r.id, { materialId: undefined });
+      for (const d of await db.documents.toArray()) {
+        if (d.linkedMaterialIds?.some((x) => ids.includes(x))) await db.documents.update(d.id, { linkedMaterialIds: d.linkedMaterialIds.filter((x) => !ids.includes(x)) });
+      }
+    });
+    toast.show(`${ids.length}개를 지웠어요`, 'info');
+    exitPick();
+  }
+
+
   if (items.length === 0) {
     return (
       <>
@@ -82,6 +105,10 @@ export function Materials() {
   return (
     <>
       <PageHeader title="자재관리" sub={`전체 ${items.length}개 · 확인 필요 ${need}개`} />
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-xs text-ink-sub">{pick ? `${sel.size}개 선택됨 · 카드를 눌러 고르세요` : '우리 집에 없는 자재는 선택해서 한 번에 지울 수 있어요'}</span>
+        <button className={`chip shrink-0 ${pick ? 'chip-on' : ''}`} onClick={() => (pick ? exitPick() : setPick(true))}>{pick ? '선택 끝내기' : '선택해서 지우기'}</button>
+      </div>
       <div className="relative mb-3">
         <Icon name="search" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-sub" />
         <input className={`${inputCls} !pl-11`} placeholder="자재명, 제조사, 모델명 검색" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -109,7 +136,24 @@ export function Materials() {
             const due = dueInfo(m.lastMaintainedDate, m.maintenanceCycleMonths);
             return (
               <li key={m.id}>
-                <Link to={`/materials/${m.id}`} className="card-3d-press flex items-center gap-3 p-3">
+                {pick ? (
+                  <button type="button" onClick={() => toggle(m.id)} className={`card-3d-press flex w-full items-center gap-3 p-3 text-left ${sel.has(m.id) ? 'ring-2 ring-primary' : ''}`}>
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${sel.has(m.id) ? 'border-primary bg-primary text-white' : 'border-line bg-white text-transparent'}`} aria-hidden>✓</span>
+                  {m.photos[0]
+                    ? <PhotoImg photo={m.photos[0]} className="h-16 w-16 shrink-0 rounded-2xl" />
+                    : <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-2xl" aria-hidden>📦</div>}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[15px] font-bold">{m.name}</div>
+                    <div className="truncate text-xs text-ink-sub">{[m.roomName, m.brand, m.modelName].filter(Boolean).join(' · ')}</div>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      <span className={`badge ${STATUS_CLASS[m.status]}`}>{STATUS_LABEL[m.status]}</span>
+                      {(due.state === 'overdue' || due.state === 'soon') && <span className="badge badge-warn">{dueLabel(due)}</span>}
+                    </div>
+                  </div>
+                  
+                </button>
+                ) : (
+                  <Link to={`/materials/${m.id}`} className="card-3d-press flex items-center gap-3 p-3">
                   {m.photos[0]
                     ? <PhotoImg photo={m.photos[0]} className="h-16 w-16 shrink-0 rounded-2xl" />
                     : <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-2xl" aria-hidden>📦</div>}
@@ -123,15 +167,32 @@ export function Materials() {
                   </div>
                   <Icon name="chevron" size={18} className="shrink-0 text-ink-sub" />
                 </Link>
+                )}
               </li>
             );
           })}
         </ul>
       )}
 
+      {pick ? (
+        <div className="fixed inset-x-0 z-30 mx-auto max-w-[480px] px-4" style={{ bottom: 'calc(92px + var(--safe-bottom))' }}>
+          <div className="card-3d flex flex-col gap-2 p-3">
+            <div className="flex gap-2 overflow-x-auto">
+              <button className="chip shrink-0" onClick={() => setSel(new Set(filtered.map((m) => m.id)))}>보이는 {filtered.length}개 모두 선택</button>
+              <button className="chip shrink-0" onClick={() => setSel(new Set(filtered.filter((m) => m.status === 'UNKNOWN' && m.photos.length === 0).map((m) => m.id)))}>손대지 않은 미확인만 선택</button>
+              <button className="chip shrink-0" onClick={() => setSel(new Set())}>선택 해제</button>
+            </div>
+            <div className="flex gap-2">
+              <button className="btn-soft flex-1 !py-2.5" onClick={exitPick}>취소</button>
+              <button className="btn-3d flex-1 !py-2.5 disabled:opacity-50" disabled={!sel.size} onClick={removeSelected}>{sel.size}개 지우기</button>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="pointer-events-none fixed inset-x-0 z-30 mx-auto max-w-[480px] px-4" style={{ bottom: 'calc(92px + var(--safe-bottom))' }}>
-        <button className="btn-3d pointer-events-auto w-full" onClick={() => nav('/materials/new')}>+ 자재 등록하기</button>
-      </div>
+          <button className="btn-3d pointer-events-auto w-full" onClick={() => nav('/materials/new')}>+ 자재 등록하기</button>
+        </div>
+      )}
     </>
   );
 }
