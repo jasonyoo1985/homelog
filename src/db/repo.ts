@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { HouseProfile } from './types';
+import type { HouseProfile, MaterialItem } from './types';
 
 export const uid = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -23,4 +23,10 @@ export async function ensureHouse(): Promise<HouseProfile> {
   };
   await db.houses.add(house);
   return house;
+}
+
+/** 등록 순(오래된 것 먼저). createdAt은 인덱스가 아니므로 메모리에서 정렬한다. */
+export async function listMaterials(): Promise<MaterialItem[]> {
+  const all = await db.materials.toArray();
+  return all.sort((a, b) => a.createdAt - b.createdAt);
 }

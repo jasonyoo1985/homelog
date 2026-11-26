@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/db';
 import { MATERIAL_CATEGORIES, type MaterialItem } from '@/db/types';
 import { createStandardTemplate, STANDARD_TEMPLATE } from '@/db/template';
-import { ensureHouse } from '@/db/repo';
+import { ensureHouse, listMaterials } from '@/db/repo';
 import { dueInfo, dueLabel } from '@/lib/dates';
 import { STATUS_CLASS, STATUS_LABEL } from '@/lib/status';
 import { PageHeader } from '@/components/PageHeader';
@@ -40,7 +40,7 @@ export function Materials() {
   const status = (sp.get('status') as StatusFilter) || 'all';
   const room = sp.get('room') || '';
 
-  const items = useLiveQuery(() => db.materials.orderBy('createdAt').toArray(), []);
+  const items = useLiveQuery(() => listMaterials(), []);
   const house = useLiveQuery(() => db.houses.toCollection().first(), []);
 
   const setParam = (k: string, v: string) => {

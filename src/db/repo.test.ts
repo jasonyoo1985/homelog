@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
-import { DEFAULT_ROOMS, ensureHouse } from './repo';
+import { DEFAULT_ROOMS, ensureHouse, listMaterials } from './repo';
+import { createStandardTemplate } from './template';
 
 describe('ensureHouse', () => {
   beforeEach(async () => {
@@ -12,5 +13,15 @@ describe('ensureHouse', () => {
     expect(a.id).toBe(b.id);
     expect(a.rooms).toEqual(DEFAULT_ROOMS);
     expect(await db.houses.count()).toBe(1);
+  });
+});
+
+describe('listMaterials', () => {
+  beforeEach(async () => { await db.materials.clear(); });
+  it('인덱스 오류 없이 등록 순으로 조회', async () => {
+    await createStandardTemplate('h1');
+    const items = await listMaterials();
+    expect(items).toHaveLength(25);
+    expect(items[0].createdAt).toBeLessThanOrEqual(items[24].createdAt);
   });
 });
