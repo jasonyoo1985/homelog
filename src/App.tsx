@@ -6,6 +6,9 @@ import { Loading } from '@/components/EmptyState';
 import { ensureHouse } from '@/db/repo';
 import { Home } from '@/pages/Home';
 import { Materials } from '@/pages/Materials';
+import { MaterialForm } from '@/pages/MaterialForm';
+import { MaterialDetail } from '@/pages/MaterialDetail';
+import { HouseSettings } from '@/pages/HouseSettings';
 import { Repairs } from '@/pages/Repairs';
 import { Docs } from '@/pages/Docs';
 
@@ -21,6 +24,10 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="materials" element={<Materials />} />
+            <Route path="materials/new" element={<MaterialForm />} />
+            <Route path="materials/:id" element={<MaterialDetail />} />
+            <Route path="materials/:id/edit" element={<MaterialForm />} />
+            <Route path="house" element={<HouseSettings />} />
             <Route path="repairs" element={<Repairs />} />
             <Route path="docs" element={<Docs />} />
           </Route>
