@@ -34,11 +34,15 @@ body {
 
 @keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes slide-l { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: none; } }
+@keyframes slide-r { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 .anim-sheet { animation: sheet-up .25s cubic-bezier(.2,.8,.2,1); }
 .anim-toast { animation: toast-in .2s ease-out; }
 .anim-fade { animation: fade-in .2s ease-out; }
+.anim-slide-l { animation: slide-l .24s cubic-bezier(.2,.8,.2,1); }
+.anim-slide-r { animation: slide-r .24s cubic-bezier(.2,.8,.2,1); }
 
 @media (prefers-reduced-motion: reduce) {
-  .anim-sheet, .anim-toast, .anim-fade { animation: none; }
+  .anim-sheet, .anim-toast, .anim-fade, .anim-slide-l, .anim-slide-r { animation: none; }
 }

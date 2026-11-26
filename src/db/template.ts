@@ -40,7 +40,19 @@ export function buildTemplateItems(houseId: string, now = Date.now()): MaterialI
   }));
 }
 
-/** 자재가 하나도 없을 때만 생성 (중복 방지). 생성 개수를 반환 */
+/** 고른 항목만 추가. 같은 공간·이름이 이미 있으면 건너뛴다. 생성 개수를 반환 */
+export async function addTemplateItems(houseId: string, indices: number[]): Promise<number> {
+  return db.transaction('rw', db.materials, async () => {
+    const existing = await db.materials.where('houseId').equals(houseId).toArray();
+    const have = new Set(existing.map((m) => `${m.roomName}|${m.name}`));
+    const now = Date.now();
+    const items = buildTemplateItems(houseId, now).filter((m, i) => indices.includes(i) && !have.has(`${m.roomName}|${m.name}`));
+    await db.materials.bulkAdd(items);
+    return items.length;
+  });
+}
+
+/** 자재가 하나도 없을 때만 전체 생성 (중복 방지). 생성 개수를 반환 */
 export async function createStandardTemplate(houseId: string): Promise<number> {
   return db.transaction('rw', db.materials, async () => {
     if ((await db.materials.where('houseId').equals(houseId).count()) > 0) return 0;

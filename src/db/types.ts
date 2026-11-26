@@ -67,6 +67,8 @@ export interface MaterialItem {
 export type IssueType = '파손' | '균열' | '누수' | '곰팡이' | '작동불량' | '소음/마모' | '소모품교체' | '기타';
 export type RepairStage = 'FOUND' | 'IN_PROGRESS' | 'DONE';
 
+export interface Quote { id: ID; vendor: string; amount: number; note?: string }
+
 export interface RepairRecord {
   id: ID;
   houseId: ID;
@@ -80,6 +82,7 @@ export interface RepairRecord {
   providerName?: string; // 업체명 또는 '자가수리'
   cost?: number; // 원
   beforeAfterNotes?: string;
+  quotes?: Quote[]; // 견적 비교(사용자가 직접 입력)
   photos: StoredPhoto[];
   createdAt: number;
   updatedAt: number;
@@ -115,6 +118,32 @@ export interface ChecklistDone {
   month: string;
   taskKey: string;
   doneAt: number;
+}
+
+export type ContactCategory = '제조사 A/S' | '시공·인테리어' | '설비·수리' | '관리사무소' | '기타';
+/** 사용자가 직접 저장하는 업체 연락처 (앱이 임의로 만들지 않음) */
+export interface ContactItem {
+  id: ID;
+  houseId: ID;
+  name: string;
+  category: ContactCategory;
+  phone?: string;
+  memo?: string;
+  materialId?: ID;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export type InspectState = 'TODO' | 'OK' | 'ISSUE';
+/** 입주 점검 항목별 결과 */
+export interface InspectionItem {
+  id: string; // `${houseId}:${key}`
+  houseId: ID;
+  key: string;
+  state: InspectState;
+  note?: string;
+  photos: StoredPhoto[];
+  updatedAt: number;
 }
 
 export interface Setting {

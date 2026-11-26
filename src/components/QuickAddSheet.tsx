@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
+import { useBackClose } from '@/lib/useBackClose';
 
 const ACTIONS: { label: string; sub: string; icon: IconName; to: string; tone: string }[] = [
   { label: '자재 추가', sub: '사진 먼저, 이름은 나중에', icon: 'box', to: '/materials', tone: 'from-primary-400 to-primary' },
@@ -10,6 +11,7 @@ const ACTIONS: { label: string; sub: string; icon: IconName; to: string; tone: s
 
 export function QuickAddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const nav = useNavigate();
+  useBackClose(open, onClose);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="빠른 추가">

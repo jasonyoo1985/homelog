@@ -62,6 +62,15 @@ export function Home() {
         </Link>
       </section>
 
+      <Link to="/guide" className="card-3d-press flex items-center gap-3 p-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-100 text-2xl" aria-hidden>📖</span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-bold">이용 가이드</span>
+          <span className="block text-xs text-ink-sub">처음이라면 여기서 시작하세요. 메뉴별 역할과 사용 순서를 알려 드려요.</span>
+        </span>
+        <Icon name="chevron" size={18} className="shrink-0 text-ink-sub" />
+      </Link>
+
       <section>
         <h3 className="mb-3 text-base font-bold">우리 집 현황</h3>
         <div className="grid grid-cols-3 gap-3">

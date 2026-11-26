@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { addMonths, dueInfo, dueLabel } from './dates';
 import { inquiryText, naverUrl, searchQuery } from './search';
 import { deriveStatus } from './status';
-import { STANDARD_TEMPLATE, createStandardTemplate } from '@/db/template';
+import { STANDARD_TEMPLATE, createStandardTemplate, addTemplateItems } from '@/db/template';
 import { db } from '@/db/db';
 
 describe('dates', () => {
@@ -41,5 +41,10 @@ describe('template', () => {
     expect(await createStandardTemplate('h1')).toBe(25);
     expect(await createStandardTemplate('h1')).toBe(0);
     expect(await db.materials.count()).toBe(25);
+  });
+  it('고른 항목만 추가하고 중복은 건너뜀', async () => {
+    expect(await addTemplateItems('h2', [0, 1, 2])).toBe(3);
+    expect(await addTemplateItems('h2', [1, 2, 3])).toBe(1);
+    expect(await db.materials.where('houseId').equals('h2').count()).toBe(4);
   });
 });

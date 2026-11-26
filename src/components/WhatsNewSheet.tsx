@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useBackClose } from '@/lib/useBackClose';
 import { KIND_LABEL, type Release, type ReleaseItem } from '@/data/releases';
 
 const TONE: Record<ReleaseItem['tone'], string> = {
@@ -11,6 +12,7 @@ const BADGE: Record<ReleaseItem['kind'], string> = { new: 'badge-warn', better: 
 
 export function WhatsNewSheet({ release, onClose }: { release: Release; onClose: () => void }) {
   const nav = useNavigate();
+  useBackClose(true, onClose);
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center" role="dialog" aria-modal="true" aria-label="새로 바뀐 점">
       <button className="anim-fade absolute inset-0 bg-navy/45 backdrop-blur-[2px]" onClick={onClose} aria-label="닫기" />

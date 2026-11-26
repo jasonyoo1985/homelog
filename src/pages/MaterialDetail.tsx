@@ -10,6 +10,8 @@ import { PhotoImg } from '@/components/Photo';
 import { Loading, EmptyState } from '@/components/EmptyState';
 import { useToast } from '@/components/Toast';
 import { inputCls } from '@/components/Field';
+import { manWon, STAGE_CLASS, STAGE_LABEL } from '@/lib/repair';
+import { uid } from '@/db/repo';
 
 function Row({ k, v }: { k: string; v?: string }) {
   return (
@@ -27,6 +29,7 @@ export function MaterialDetail() {
   const m = useLiveQuery(async () => (await db.materials.get(id)) ?? null, [id]);
   const house = useLiveQuery(() => db.houses.toCollection().first(), []);
   const [notes, setNotes] = useState<string | null>(null);
+  const repairs = useLiveQuery(() => db.repairs.where('materialId').equals(id).toArray(), [id]);
 
   if (m === undefined || !house) return <Loading />;
   if (!m) return (<><BackHeader title="자재" to="/materials" /><EmptyState title="자재를 찾을 수 없어요" /></>);
@@ -48,6 +51,13 @@ export function MaterialDetail() {
     if (notes === null || notes === (m!.discoveryNotes ?? '')) return;
     await db.materials.update(m!.id, { discoveryNotes: notes, updatedAt: Date.now() });
     toast.show('탐색 메모를 저장했어요');
+  }
+  async function duplicate() {
+    const now = Date.now();
+    const copy = { ...m!, id: uid(), name: `${m!.name} (복사)`, photos: [], lastMaintainedDate: undefined, createdAt: now, updatedAt: now };
+    await db.materials.add(copy);
+    toast.show('복사했어요. 달라진 부분만 고쳐 주세요');
+    nav(`/materials/${copy.id}/edit`);
   }
   async function remove() {
     if (!window.confirm(`「${m!.name}」을(를) 삭제할까요? 되돌릴 수 없어요.`)) return;
@@ -102,6 +112,17 @@ export function MaterialDetail() {
             placeholder="예) 11/26 관리사무소 문의 → 12/1 회신 예정" />
         </section>
 
+        <section className="card-3d p-4">
+          <div className="mb-2 flex items-center justify-between"><h2 className="text-sm font-bold">수리 이력</h2>
+            <Link to={`/repairs/new?materialId=${m.id}`} className="chip !text-primary">+ 수리 기록</Link></div>
+          {(repairs ?? []).length === 0 ? <p className="text-sm text-ink-sub">이 자재의 수리 기록이 아직 없어요.</p> : (
+            <ul className="flex flex-col gap-2">{[...(repairs ?? [])].sort((a, b) => b.occurredDate.localeCompare(a.occurredDate)).map((r) => (
+              <li key={r.id}><Link to={`/repairs/${r.id}`} className="flex items-center justify-between gap-2 rounded-2xl bg-bg p-3">
+                <span className="min-w-0 truncate text-sm font-semibold">{r.title}<span className="ml-2 text-xs font-normal text-ink-sub">{r.occurredDate}</span></span>
+                <span className="flex shrink-0 items-center gap-2">{r.cost ? <span className="text-xs">{manWon(r.cost)}</span> : null}<span className={`badge ${STAGE_CLASS[r.stage]}`}>{STAGE_LABEL[r.stage]}</span></span>
+              </Link></li>))}</ul>)}
+        </section>
+        <button className="btn-soft w-full" onClick={duplicate}>복사해서 새 자재 만들기 (비슷한 자재 빠르게 등록)</button>
         <button className="py-3 text-sm font-semibold text-danger" onClick={remove}>이 자재 삭제</button>
       </div>
     </>

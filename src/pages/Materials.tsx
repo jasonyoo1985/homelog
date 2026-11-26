@@ -3,15 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/db';
 import { MATERIAL_CATEGORIES, type MaterialItem } from '@/db/types';
-import { createStandardTemplate, STANDARD_TEMPLATE } from '@/db/template';
-import { ensureHouse, listMaterials } from '@/db/repo';
+import { STANDARD_TEMPLATE } from '@/db/template';
+import { listMaterials } from '@/db/repo';
 import { dueInfo, dueLabel } from '@/lib/dates';
 import { STATUS_CLASS, STATUS_LABEL } from '@/lib/status';
 import { PageHeader } from '@/components/PageHeader';
 import { EmptyState, Loading } from '@/components/EmptyState';
 import { PhotoImg } from '@/components/Photo';
 import { Icon } from '@/components/Icon';
-import { useToast } from '@/components/Toast';
 import { inputCls } from '@/components/Field';
 
 type StatusFilter = 'all' | 'need' | 'UNKNOWN' | 'PARTIAL' | 'VERIFIED' | 'due';
@@ -33,7 +32,6 @@ function matchStatus(m: MaterialItem, f: StatusFilter): boolean {
 
 export function Materials() {
   const nav = useNavigate();
-  const toast = useToast();
   const [sp, setSp] = useSearchParams();
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
@@ -64,21 +62,17 @@ export function Materials() {
 
   if (!items || !house) return <Loading />;
 
-  async function makeTemplate() {
-    const h = await ensureHouse();
-    const n = await createStandardTemplate(h.id);
-    toast.show(n ? `표준 자재 ${n}종을 만들었어요` : '이미 자재가 있어요', n ? 'ok' : 'info');
-  }
-
   if (items.length === 0) {
     return (
       <>
-        <PageHeader title="자재관리" sub="집 안의 모든 자재와 제품을 체계적으로 기록하세요" />
-        <EmptyState title="아직 등록된 자재가 없어요" desc={`한국 아파트 표준 자재 ${STANDARD_TEMPLATE.length}종을 '미확인' 상태로 만들어 두고, 카드를 눌러 아는 것만 채우면 돼요.`}
+        <PageHeader title="자재관리" sub="집 안 자재·설비의 제조사, 모델명, 사진, 교체 주기를 기록하는 곳" />
+        <EmptyState title="아직 등록된 자재가 없어요" desc="집에 있는 바닥, 벽지, 창호, 보일러 같은 자재와 설비를 기록하는 곳이에요. 아래 두 방법 중 편한 쪽으로 시작해 보세요."
           action={
-            <div className="mt-2 flex w-full flex-col gap-2">
-              <button className="btn-3d w-full" onClick={makeTemplate}>표준 자재 {STANDARD_TEMPLATE.length}종 한 번에 만들기</button>
-              <button className="btn-soft w-full" onClick={() => nav('/materials/new')}>직접 하나씩 등록하기</button>
+            <div className="mt-2 flex w-full flex-col gap-2 text-left">
+              <button className="btn-3d w-full" onClick={() => nav('/materials/template')}>표준 자재 목록 보고 고르기</button>
+              <p className="px-1 text-xs leading-relaxed text-ink-sub">거실 마루·보일러 등 흔한 자재 {STANDARD_TEMPLATE.length}종이 나와요. 우리 집에 있는 것만 체크해서 빈 카드로 만들 수 있어요. (누르기 전에 목록을 먼저 볼 수 있어요)</p>
+              <button className="btn-soft mt-1 w-full" onClick={() => nav('/materials/new')}>직접 하나씩 등록하기</button>
+              <p className="px-1 text-xs leading-relaxed text-ink-sub">사진만 찍고 이름은 나중에 적어도 돼요.</p>
             </div>} />
       </>
     );

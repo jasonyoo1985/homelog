@@ -12,7 +12,11 @@ import { Materials } from '@/pages/Materials';
 import { MaterialForm } from '@/pages/MaterialForm';
 import { MaterialDetail } from '@/pages/MaterialDetail';
 import { HouseSettings } from '@/pages/HouseSettings';
+import { TemplatePicker } from '@/pages/TemplatePicker';
+import { Guide } from '@/pages/Guide';
 import { Repairs } from '@/pages/Repairs';
+import { RepairForm } from '@/pages/RepairForm';
+import { RepairDetail } from '@/pages/RepairDetail';
 import { Docs } from '@/pages/Docs';
 
 export default function App() {
@@ -36,10 +40,15 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="materials" element={<Materials />} />
             <Route path="materials/new" element={<MaterialForm />} />
+            <Route path="materials/template" element={<TemplatePicker />} />
             <Route path="materials/:id" element={<MaterialDetail />} />
             <Route path="materials/:id/edit" element={<MaterialForm />} />
             <Route path="house" element={<HouseSettings />} />
+            <Route path="guide" element={<Guide />} />
             <Route path="repairs" element={<Repairs />} />
+            <Route path="repairs/new" element={<RepairForm />} />
+            <Route path="repairs/:id" element={<RepairDetail />} />
+            <Route path="repairs/:id/edit" element={<RepairForm />} />
             <Route path="docs" element={<Docs />} />
           </Route>
         </Routes>
