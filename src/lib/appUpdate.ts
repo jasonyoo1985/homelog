@@ -77,3 +77,32 @@ export async function runAppUpdate(action: UpdatePlan['action']): Promise<void> 
     else await AppUpdate.startFlexibleUpdate();
   } catch { /* 사용자가 취소하면 오류가 날 수 있으며, 다음에 앱을 열 때 다시 안내한다 */ }
 }
+
+const AVAIL_LABEL: Record<number, string> = { 0: '알 수 없음', 1: '새 버전 없음', 2: '새 버전 있음', 3: '업데이트 진행 중' };
+
+/** 설정 화면의 '업데이트 확인'용: 구글 플레이가 지금 무엇을 알려 주는지 사람이 읽을 수 있게 정리한다 */
+export async function diagnoseUpdate(): Promise<{ ok: boolean; lines: string[]; hint?: string }> {
+  if (!Capacitor.isNativePlatform()) return { ok: false, lines: ['웹 화면에서는 확인할 수 없어요. 폰에 설치한 앱에서 눌러 주세요.'] };
+  try {
+    const i = await AppUpdate.getAppUpdateInfo();
+    const lines = [
+      `설치된 버전 코드: ${i.currentVersionCode}`,
+      `플레이가 아는 최신 버전 코드: ${i.availableVersionCode ?? '아직 알려 주지 않음'}`,
+      `상태: ${AVAIL_LABEL[i.updateAvailability] ?? i.updateAvailability}`,
+      `즉시 업데이트 가능: ${i.immediateUpdateAllowed ? '예' : '아니요'} / 백그라운드 업데이트 가능: ${i.flexibleUpdateAllowed ? '예' : '아니요'}`,
+    ];
+    const none = i.updateAvailability === AppUpdateAvailability.UPDATE_NOT_AVAILABLE;
+    return { ok: true, lines, hint: none ? '플레이가 아직 새 버전을 모르는 상태예요. Play 스토어에서 앱 페이지를 열어 업데이트를 확인하면 곧 반영돼요.' : undefined };
+  } catch (e) {
+    return {
+      ok: false,
+      lines: ['구글 플레이에서 정보를 가져오지 못했어요.', String((e as Error)?.message ?? e)],
+      hint: 'Play 스토어(내부 테스트 링크)로 설치한 앱이 아니면 이 기능을 쓸 수 없어요. 직접 설치한 파일(APK)로는 동작하지 않아요.',
+    };
+  }
+}
+
+/** Play 스토어의 이 앱 페이지를 연다 (여기서 업데이트를 직접 받을 수 있다) */
+export async function openStorePage(): Promise<void> {
+  try { await AppUpdate.openAppStore(); } catch { /* 스토어 앱이 없으면 무시 */ }
+}

@@ -8,6 +8,7 @@ import { Field, TextInput, inputCls } from '@/components/Field';
 import { Loading } from '@/components/EmptyState';
 import { WhatsNewSheet } from '@/components/WhatsNewSheet';
 import { LATEST } from '@/data/releases';
+import { diagnoseUpdate, openStorePage } from '@/lib/appUpdate';
 import { useToast } from '@/components/Toast';
 
 const TYPES: HousingType[] = ['아파트', '빌라', '주택', '오피스텔', '기타'];
@@ -24,6 +25,8 @@ export function HouseSettings() {
   const [rooms, setRooms] = useState<string[]>([]);
   const [newRoom, setNewRoom] = useState('');
   const [notes, setNotes] = useState(false);
+  const [diag, setDiag] = useState<{ ok: boolean; lines: string[]; hint?: string } | null>(null);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     if (!house) return;
@@ -84,6 +87,21 @@ export function HouseSettings() {
             <div className="text-xs text-ink-sub">업데이트된 내용을 다시 볼 수 있어요</div>
           </div>
           <button className="btn-soft !px-4 !py-2 text-sm" onClick={() => setNotes(true)}>새로 바뀐 점</button>
+        </div>
+        <div className="card-3d p-4">
+          <div className="text-sm font-bold">업데이트 확인</div>
+          <p className="mt-1 text-xs text-ink-sub">새 버전이 있는지 구글 플레이에 물어봐요. 앱을 열 때도 자동으로 확인해요.</p>
+          <div className="mt-3 flex gap-2">
+            <button className="btn-soft flex-1 !px-3 !py-2 text-sm" disabled={checking}
+              onClick={async () => { setChecking(true); setDiag(await diagnoseUpdate()); setChecking(false); }}>{checking ? '확인 중…' : '지금 확인하기'}</button>
+            <button className="btn-soft flex-1 !px-3 !py-2 text-sm" onClick={() => void openStorePage()}>Play 스토어에서 열기</button>
+          </div>
+          {diag && (
+            <div className="mt-3 rounded-2xl bg-bg p-3 text-xs leading-relaxed">
+              {diag.lines.map((l) => <div key={l}>{l}</div>)}
+              {diag.hint && <p className="mt-2 font-semibold text-primary">{diag.hint}</p>}
+            </div>
+          )}
         </div>
       </div>
       {notes && <WhatsNewSheet release={LATEST} onClose={() => setNotes(false)} />}

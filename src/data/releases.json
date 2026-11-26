@@ -1,26 +1,69 @@
 {
   "releases": [
     {
+      "id": "2026-11-v0.1.14",
+      "title": "업데이트를 직접 확인할 수 있어요",
+      "subtitle": "새 버전이 잘 오는지 헷갈리지 않도록 확인 도구를 넣었어요.",
+      "items": [
+        {
+          "emoji": "🔄",
+          "tone": "blue",
+          "kind": "new",
+          "title": "설정에서 지금 확인하기",
+          "desc": "우리 집 설정의 '업데이트 확인'에서 구글 플레이가 알려 주는 최신 버전 정보를 바로 볼 수 있어요.",
+          "cta": {
+            "label": "설정 열기",
+            "to": "/house"
+          }
+        },
+        {
+          "emoji": "🛡️",
+          "tone": "green",
+          "kind": "better",
+          "title": "백업·복원 준비",
+          "desc": "기록을 파일로 저장하고 다시 불러오는 기능의 바탕을 만들었어요. 곧 문서함에서 쓸 수 있어요."
+        }
+      ]
+    },
+    {
       "id": "2026-11-v0.1.13",
       "title": "쉽게 시작하고, 수리도 기록해요",
       "subtitle": "처음 쓰는 분도 헤매지 않도록 안내를 늘렸어요. 쓰던 대로 쓰셔도 돼요.",
       "items": [
         {
-          "emoji": "🧭", "tone": "blue", "kind": "new", "title": "처음 쓰는 분을 위한 안내",
+          "emoji": "🧭",
+          "tone": "blue",
+          "kind": "new",
+          "title": "처음 쓰는 분을 위한 안내",
           "desc": "첫 실행 소개, 메뉴별 역할을 알려 주는 이용 가이드, 우리 집에 있는 것만 골라 만드는 표준 자재 미리보기가 생겼어요.",
-          "cta": { "label": "이용 가이드 보기", "to": "/guide" }
+          "cta": {
+            "label": "이용 가이드 보기",
+            "to": "/guide"
+          }
         },
         {
-          "emoji": "🛠️", "tone": "amber", "kind": "new", "title": "수리이력 기록",
+          "emoji": "🛠️",
+          "tone": "amber",
+          "kind": "new",
+          "title": "수리이력 기록",
           "desc": "고장이 났을 때 발견부터 수리 완료까지 비용과 함께 남기고, 업체별 견적을 비교해 볼 수 있어요.",
-          "cta": { "label": "수리이력 보기", "to": "/repairs" }
+          "cta": {
+            "label": "수리이력 보기",
+            "to": "/repairs"
+          }
         },
         {
-          "emoji": "👆", "tone": "green", "kind": "better", "title": "밀어서 이동, 뒤로가기도 자연스럽게",
+          "emoji": "👆",
+          "tone": "green",
+          "kind": "better",
+          "title": "밀어서 이동, 뒤로가기도 자연스럽게",
           "desc": "탭을 좌우로 밀어 옮길 수 있고, 뒤로가기를 눌러도 앱이 닫히지 않고 이전 화면으로 돌아가요."
         },
         {
-          "emoji": "🔔", "tone": "rose", "kind": "better", "title": "새 버전 소식을 먼저 알려 드려요",
+          "emoji": "🔔",
+          "tone": "rose",
+          "kind": "better",
+          "title": "새 버전 소식을 먼저 알려 드려요",
           "desc": "앱을 열었을 때 새 버전이 있으면 어떤 내용이 바뀌는지 먼저 보여 드리고, 원하실 때 업데이트해요."
         }
       ]
@@ -31,22 +74,43 @@
       "subtitle": "쓰던 대로 쓰셔도 돼요. 필요할 때 골라 쓰는 기능이에요.",
       "items": [
         {
-          "emoji": "🏠", "tone": "blue", "kind": "new", "title": "표준 자재 25종, 한 번에",
+          "emoji": "🏠",
+          "tone": "blue",
+          "kind": "new",
+          "title": "표준 자재 25종, 한 번에",
           "desc": "거실 마루부터 보일러까지 우리 집에 있을 법한 자재를 미리 만들어 드려요. 아는 것만 채워도 충분해요.",
-          "cta": { "label": "지금 해보기", "to": "/materials" }
+          "cta": {
+            "label": "지금 해보기",
+            "to": "/materials"
+          }
         },
         {
-          "emoji": "🔍", "tone": "green", "kind": "new", "title": "모르는 자재 찾기",
+          "emoji": "🔍",
+          "tone": "green",
+          "kind": "new",
+          "title": "모르는 자재 찾기",
           "desc": "라벨 사진을 찍어 두면 모델명 검색부터 관리사무소에 보낼 문의 문구 복사까지 도와드려요.",
-          "cta": { "label": "자재 보러 가기", "to": "/materials" }
+          "cta": {
+            "label": "자재 보러 가기",
+            "to": "/materials"
+          }
         },
         {
-          "emoji": "⏰", "tone": "amber", "kind": "new", "title": "교체 시기를 챙겨 드려요",
+          "emoji": "⏰",
+          "tone": "amber",
+          "kind": "new",
+          "title": "교체 시기를 챙겨 드려요",
           "desc": "에어컨 필터, 도어락 건전지처럼 주기가 있는 건 '오늘 교체 완료'만 누르세요. 다음 날짜는 알아서 계산해요.",
-          "cta": { "label": "교체 임박 보기", "to": "/materials?status=due" }
+          "cta": {
+            "label": "교체 임박 보기",
+            "to": "/materials?status=due"
+          }
         },
         {
-          "emoji": "🛠️", "tone": "rose", "kind": "fixed", "title": "화면이 멈추던 문제를 고쳤어요",
+          "emoji": "🛠️",
+          "tone": "rose",
+          "kind": "fixed",
+          "title": "화면이 멈추던 문제를 고쳤어요",
           "desc": "자재관리가 열리지 않던 문제를 해결했고, 문제가 생겨도 안내 화면이 나와요."
         }
       ]

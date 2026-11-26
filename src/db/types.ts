@@ -9,6 +9,8 @@ export interface HouseProfile {
   areaPyeong?: number;
   moveInDate?: string; // YYYY-MM-DD
   builtYear?: number;
+  /** 하자담보책임기간 기산일(세대를 인도받은 날 등). 품질보증서에 기준일이 있으면 그 날짜 */
+  warrantyStartDate?: string;
   rooms: string[];
   createdAt: number;
   updatedAt: number;
@@ -55,6 +57,8 @@ export interface MaterialItem {
   warrantyEndDate?: string;
   customerCenter?: string; // 사용자가 직접 입력한 A/S 메모 (앱이 임의 생성 금지)
   purchaseUrlOrNote?: string;
+  /** 구입가·계약금액(원). 사용자가 입력 */
+  purchasePrice?: number;
   status: VerifyStatus;
   photos: StoredPhoto[];
   maintenanceCycleMonths?: number;
