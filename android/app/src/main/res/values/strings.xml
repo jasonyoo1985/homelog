@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">HOMELOG</string>
-    <string name="title_activity_main">HOMELOG</string>
+    <string name="app_name">홈로그</string>
+    <string name="title_activity_main">홈로그</string>
     <string name="package_name">kr.homelog.app</string>
     <string name="custom_url_scheme">kr.homelog.app</string>
 </resources>
