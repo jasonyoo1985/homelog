@@ -7,7 +7,8 @@ import { QuickAddSheet } from './QuickAddSheet';
 import { WhatsNewSheet } from './WhatsNewSheet';
 import { Onboarding, isOnboarded } from './Onboarding';
 import { useToast } from './Toast';
-import { LATEST } from '@/data/releases';
+import { LATEST, type Release } from '@/data/releases';
+import { planAppUpdate, runAppUpdate, type UpdatePlan } from '@/lib/appUpdate';
 import { getSeen, isReturningUser, markSeen, shouldShowRelease } from '@/lib/whatsnew';
 import { decideBack, popBack, TAB_ROUTES } from '@/lib/back';
 
@@ -33,6 +34,19 @@ export function Layout() {
     if (r === 'show') setNotes(true);
   }, []);
   const closeNotes = () => { markSeen(LATEST.id); setNotes(false); };
+
+  // ── 새 버전 확인: 앱을 열 때 구글 플레이에 새 버전이 있으면 '무엇이 바뀌는지' 먼저 보여주고 묻는다 ──
+  const [update, setUpdate] = useState<UpdatePlan | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void planAppUpdate(LATEST.id).then((p) => { if (alive && p) setUpdate(p); });
+    return () => { alive = false; };
+  }, []);
+  const generic: Release = { id: 'generic', title: '새 버전이 나왔어요', subtitle: '더 좋아진 홈로그를 받아 보세요. 지금 업데이트할까요?', items: [] };
+  const confirmUpdate = () => {
+    const p = update; setUpdate(null);
+    if (p) void runAppUpdate(p.action); // 즉시 방식: 설치 후 앱이 다시 열리고, 그때 '새로 바뀐 점'이 나온다
+  };
 
   // ── 탭 이동 방향 애니메이션 (탭 버튼·스와이프 공통) ──
   useEffect(() => {
@@ -108,7 +122,8 @@ export function Layout() {
       </main>
       <BottomNav onQuickAdd={() => setSheet(true)} />
       <QuickAddSheet open={sheet} onClose={() => setSheet(false)} />
-      {notes && <WhatsNewSheet release={LATEST} onClose={closeNotes} />}
+      {update && <WhatsNewSheet mode="update" release={update.release ?? generic} onClose={() => setUpdate(null)} onConfirm={confirmUpdate} />}
+      {!update && notes && <WhatsNewSheet release={LATEST} onClose={closeNotes} />}
       {intro && <Onboarding onDone={() => setIntro(false)} />}
     </div>
   );

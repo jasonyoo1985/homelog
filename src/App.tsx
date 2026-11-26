@@ -4,7 +4,6 @@ import { Layout } from '@/components/Layout';
 import { ToastProvider } from '@/components/Toast';
 import { Loading } from '@/components/EmptyState';
 import { ensureHouse } from '@/db/repo';
-import { checkForAppUpdate } from '@/lib/appUpdate';
 import { db } from '@/db/db';
 import { setReturningUser } from '@/lib/whatsnew';
 import { Home } from '@/pages/Home';
@@ -18,6 +17,7 @@ import { Repairs } from '@/pages/Repairs';
 import { RepairForm } from '@/pages/RepairForm';
 import { RepairDetail } from '@/pages/RepairDetail';
 import { Docs } from '@/pages/Docs';
+import { DevUpdatePreview } from '@/pages/DevUpdatePreview';
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -29,7 +29,6 @@ export default function App() {
       setReady(true);
     })();
   }, []);
-  useEffect(() => { void checkForAppUpdate(); }, []);
   if (!ready) return <Loading />;
   // Capacitor(file://) 환경에서도 새로고침이 깨지지 않도록 HashRouter 사용
   return (
@@ -50,6 +49,7 @@ export default function App() {
             <Route path="repairs/:id" element={<RepairDetail />} />
             <Route path="repairs/:id/edit" element={<RepairForm />} />
             <Route path="docs" element={<Docs />} />
+            {import.meta.env.DEV && <Route path="dev/update" element={<DevUpdatePreview />} />}
           </Route>
         </Routes>
       </HashRouter>

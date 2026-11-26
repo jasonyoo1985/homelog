@@ -1,3 +1,5 @@
+import data from './releases.json';
+
 export type NoteKind = 'new' | 'better' | 'fixed';
 
 export interface ReleaseItem {
@@ -19,38 +21,11 @@ export interface Release {
 
 export const KIND_LABEL: Record<NoteKind, string> = { new: '새로워요', better: '좋아졌어요', fixed: '고쳤어요' };
 
-/** 최신 안내가 맨 앞 */
-export const RELEASES: Release[] = [
-  {
-    id: '2026-11-v0.1.11',
-    title: '자재관리가 생겼어요',
-    subtitle: '쓰던 대로 쓰셔도 돼요. 필요할 때 골라 쓰는 기능이에요.',
-    items: [
-      {
-        emoji: '🏠', tone: 'blue', kind: 'new', title: '표준 자재 25종, 한 번에',
-        desc: '거실 마루부터 보일러까지 우리 집에 있을 법한 자재를 미리 만들어 드려요. 아는 것만 채워도 충분해요.',
-        cta: { label: '지금 해보기', to: '/materials' },
-      },
-      {
-        emoji: '🔍', tone: 'green', kind: 'new', title: '모르는 자재 찾기',
-        desc: '라벨 사진을 찍어 두면 모델명 검색부터 관리사무소에 보낼 문의 문구 복사까지 도와드려요.',
-        cta: { label: '자재 보러 가기', to: '/materials' },
-      },
-      {
-        emoji: '⏰', tone: 'amber', kind: 'new', title: '교체 시기를 챙겨 드려요',
-        desc: "에어컨 필터, 도어락 건전지처럼 주기가 있는 건 '오늘 교체 완료'만 누르세요. 다음 날짜는 알아서 계산해요.",
-        cta: { label: '교체 임박 보기', to: '/materials?status=due' },
-      },
-      {
-        emoji: '🔄', tone: 'blue', kind: 'better', title: '앱을 열면 알아서 업데이트돼요',
-        desc: '새 버전이 나오면 앱을 열 때 자동으로 받아서 적용해요. 따로 스토어에 들어가지 않아도 돼요.',
-      },
-      {
-        emoji: '🛠️', tone: 'rose', kind: 'fixed', title: '화면이 멈추던 문제를 고쳤어요',
-        desc: '자재관리가 열리지 않던 문제를 해결했고, 문제가 생겨도 안내 화면이 나와요.',
-      },
-    ],
-  },
-];
+/**
+ * 릴리스 노트 원본은 releases.json 한 곳. 같은 내용을 docs/releases.json(웹 공개본)에도 복사해 두며,
+ * 앱은 실행 시 웹 공개본을 읽어 '업데이트 전' 안내에 사용한다. (두 파일이 같은지는 테스트가 확인)
+ * 최신 안내가 맨 앞.
+ */
+export const RELEASES: Release[] = (data as { releases: Release[] }).releases;
 
 export const LATEST = RELEASES[0];
