@@ -14,6 +14,8 @@ export interface ReleaseItem {
 export interface Release {
   /** 앱을 업데이트한 사용자에게 한 번만 보여주는 식별자 (새 안내를 만들면 값을 바꾼다) */
   id: string;
+  /** 이 안내가 속한 앱 빌드 번호(versionCode). app-version.json과 같은 값으로 증가 */
+  build: number;
   title: string;
   subtitle: string;
   items: ReleaseItem[];

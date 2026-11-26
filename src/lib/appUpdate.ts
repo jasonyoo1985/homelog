@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { AppUpdate, AppUpdateAvailability, type AppUpdateInfo } from '@capawesome/capacitor-app-update';
 import type { Release } from '@/data/releases';
+import { mergeNotes } from './whatsnew';
 
 export type UpdateAction = 'immediate' | 'flexible' | 'none';
 
@@ -22,24 +23,24 @@ const isStr = (v: unknown): v is string => typeof v === 'string' && v.length > 0
 /** 웹에서 받은 값을 검증하며 Release로 변환. 형식이 틀리면 null (외부 입력이므로 신뢰하지 않는다) */
 export function parseRelease(v: unknown): Release | null {
   const r = v as Partial<Release> | null;
-  if (!r || !isStr(r.id) || !isStr(r.title) || !isStr(r.subtitle) || !Array.isArray(r.items)) return null;
+  if (!r || !isStr(r.id) || !isStr(r.title) || !isStr(r.subtitle) || !Array.isArray(r.items) || !Number.isInteger(r.build)) return null;
   const tones = ['blue', 'green', 'amber', 'rose'], kinds = ['new', 'better', 'fixed'];
   const items = r.items.flatMap((it) => {
     if (!it || !isStr(it.emoji) || !isStr(it.title) || !isStr(it.desc) || !tones.includes(it.tone) || !kinds.includes(it.kind)) return [];
     return [{ emoji: it.emoji, tone: it.tone, kind: it.kind, title: it.title, desc: it.desc }];
   });
-  return { id: r.id, title: r.title, subtitle: r.subtitle, items };
+  return { id: r.id, build: r.build as number, title: r.title, subtitle: r.subtitle, items };
 }
 
 /**
- * 웹 공개본에서 '지금 설치된 앱보다 새로운' 안내를 고른다.
- * 가장 앞(최신) 안내가 설치된 앱의 최신 안내와 같으면 새 안내가 없는 것이므로 null.
+ * 웹 공개본에서 '지금 설치된 앱보다 새로운(빌드 번호가 큰)' 안내를 모아 하나로 돌려준다.
+ * 새 안내가 없으면 null.
  */
-export function pickRemoteRelease(remote: unknown, installedLatestId: string): Release | null {
+export function pickRemoteRelease(remote: unknown, installedBuild: number): Release | null {
   const list = (remote as { releases?: unknown[] } | null)?.releases;
-  if (!Array.isArray(list) || list.length === 0) return null;
-  const first = parseRelease(list[0]);
-  return first && first.id !== installedLatestId ? first : null;
+  if (!Array.isArray(list)) return null;
+  const newer = list.map(parseRelease).filter((x): x is Release => !!x && x.build > installedBuild);
+  return mergeNotes(newer);
 }
 
 async function fetchRemoteReleases(timeoutMs = 4000): Promise<unknown> {
@@ -58,12 +59,12 @@ export interface UpdatePlan { action: Exclude<UpdateAction, 'none'>; release: Re
  * 아무것도 설치하지 않는다(설치는 사용자가 [업데이트]를 눌렀을 때 runAppUpdate).
  * 웹/개발 환경이나 플레이 스토어 설치본이 아니면 null.
  */
-export async function planAppUpdate(installedLatestId: string): Promise<UpdatePlan | null> {
+export async function planAppUpdate(installedBuild: number): Promise<UpdatePlan | null> {
   if (!Capacitor.isNativePlatform()) return null;
   try {
     const action = decideUpdate(await AppUpdate.getAppUpdateInfo());
     if (action === 'none') return null;
-    const release = pickRemoteRelease(await fetchRemoteReleases(), installedLatestId);
+    const release = pickRemoteRelease(await fetchRemoteReleases(), installedBuild);
     return { action, release };
   } catch {
     return null; // 오프라인이거나 플레이 스토어 설치본이 아니면 실패하는 것이 정상

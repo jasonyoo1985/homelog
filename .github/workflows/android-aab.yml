@@ -18,11 +18,13 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - name: Accept Android SDK licenses (SDK is preinstalled on runner)
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - name: Read app build number
+        run: echo "APP_BUILD=$(node -p \"require('./app-version.json').build\")" >> "$GITHUB_ENV"
       - run: npm ci
       - run: npm test
       - run: npm run build
         env:
-          VITE_APP_VERSION: 0.1.${{ github.run_number }}
+          VITE_APP_VERSION: 0.1.${{ env.APP_BUILD }}
       - run: npx cap sync android
 
       - name: Decode upload keystore
@@ -39,8 +41,8 @@ jobs:
       - name: Build release AAB
         working-directory: android
         env:
-          VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: 0.1.${{ github.run_number }}
+          VERSION_CODE: ${{ env.APP_BUILD }}
+          VERSION_NAME: 0.1.${{ env.APP_BUILD }}
           UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
           UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
           UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}

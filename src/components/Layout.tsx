@@ -7,9 +7,9 @@ import { QuickAddSheet } from './QuickAddSheet';
 import { WhatsNewSheet } from './WhatsNewSheet';
 import { Onboarding, isOnboarded } from './Onboarding';
 import { useToast } from './Toast';
-import { LATEST, type Release } from '@/data/releases';
+import { LATEST, RELEASES, type Release } from '@/data/releases';
 import { planAppUpdate, runAppUpdate, type UpdatePlan } from '@/lib/appUpdate';
-import { getSeen, isReturningUser, markSeen, shouldShowRelease } from '@/lib/whatsnew';
+import { decideWhatsNew, getSeen, getSeenBuild, isReturningUser, markSeen, sinceBuild } from '@/lib/whatsnew';
 import { decideBack, popBack, TAB_ROUTES } from '@/lib/back';
 
 const SWIPE_DISTANCE = 70;
@@ -19,30 +19,31 @@ export function Layout() {
   const nav = useNavigate();
   const toast = useToast();
   const [sheet, setSheet] = useState(false);
-  const [notes, setNotes] = useState(false);
+  const [notes, setNotes] = useState<Release | null>(null);
   const [intro, setIntro] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const prevPath = useRef(loc.pathname);
   const [dir, setDir] = useState<'l' | 'r' | null>(null);
 
-  // ── 업데이트 안내 ──
+  // ── 업데이트 후 안내: 마지막으로 본 빌드 이후에 바뀐 내용을 모아서 보여준다 ──
   useEffect(() => {
-    const r = shouldShowRelease(getSeen(), LATEST.id, isReturningUser());
-    if (r === 'silent') markSeen(LATEST.id);
-    // 처음 설치한 사용자에게는 업데이트 안내 대신 소개 화면을, 기존 사용자에게는 업데이트 안내를 보여준다
-    if (r === 'silent' && !isOnboarded()) setIntro(true);
-    if (r === 'show') setNotes(true);
+    const since = sinceBuild(getSeen(), getSeenBuild(), RELEASES);
+    const d = decideWhatsNew(since, isReturningUser(), RELEASES, __APP_BUILD__);
+    if (d.kind === 'silent') {
+      markSeen(LATEST.id, __APP_BUILD__);
+      if (!isOnboarded()) setIntro(true); // 처음 설치한 사용자에게는 업데이트 안내 대신 소개 화면
+    } else if (d.kind === 'show') setNotes(d.notes);
   }, []);
-  const closeNotes = () => { markSeen(LATEST.id); setNotes(false); };
+  const closeNotes = () => { markSeen(LATEST.id, __APP_BUILD__); setNotes(null); };
 
   // ── 새 버전 확인: 앱을 열 때 구글 플레이에 새 버전이 있으면 '무엇이 바뀌는지' 먼저 보여주고 묻는다 ──
   const [update, setUpdate] = useState<UpdatePlan | null>(null);
   useEffect(() => {
     let alive = true;
-    void planAppUpdate(LATEST.id).then((p) => { if (alive && p) setUpdate(p); });
+    void planAppUpdate(__APP_BUILD__).then((p) => { if (alive && p) setUpdate(p); });
     return () => { alive = false; };
   }, []);
-  const generic: Release = { id: 'generic', title: '새 버전이 나왔어요', subtitle: '더 좋아진 홈로그를 받아 보세요. 지금 업데이트할까요?', items: [] };
+  const generic: Release = { id: 'generic', build: __APP_BUILD__, title: '새 버전이 나왔어요', subtitle: '더 좋아진 홈로그를 받아 보세요. 지금 업데이트할까요?', items: [] };
   const confirmUpdate = () => {
     const p = update; setUpdate(null);
     if (p) void runAppUpdate(p.action); // 즉시 방식: 설치 후 앱이 다시 열리고, 그때 '새로 바뀐 점'이 나온다
@@ -123,7 +124,7 @@ export function Layout() {
       <BottomNav onQuickAdd={() => setSheet(true)} />
       <QuickAddSheet open={sheet} onClose={() => setSheet(false)} />
       {update && <WhatsNewSheet mode="update" release={update.release ?? generic} onClose={() => setUpdate(null)} onConfirm={confirmUpdate} />}
-      {!update && notes && <WhatsNewSheet release={LATEST} onClose={closeNotes} />}
+      {!update && notes && <WhatsNewSheet release={notes} onClose={closeNotes} />}
       {intro && <Onboarding onDone={() => setIntro(false)} />}
     </div>
   );
