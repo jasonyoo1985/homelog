@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html, body, #root { height: 100%; }
+body {
+  @apply bg-bg text-ink font-sans antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+@layer components {
+  /* 3D 카드: 상단 하이라이트 + 다층 그림자. 누르면 살짝 가라앉는다 */
+  .card-3d { @apply bg-white rounded-card shadow-card border border-white/70; }
+  .card-3d-press { @apply card-3d transition duration-150 active:translate-y-[2px] active:shadow-card-press active:scale-[0.99]; }
+  .glass { @apply bg-grad-glass backdrop-blur-md border border-white/70 shadow-card; }
+  .btn-3d {
+    @apply bg-grad-primary text-white font-semibold rounded-2xl px-5 py-3 shadow-float
+           transition duration-150 active:translate-y-[2px] active:shadow-card-press;
+  }
+  .btn-soft { @apply bg-primary-100 text-primary font-semibold rounded-2xl px-5 py-3 active:bg-primary-50 transition; }
+  .chip { @apply inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium border border-line bg-white text-ink-sub transition; }
+  .chip-on { @apply bg-grad-primary text-white border-transparent shadow-card-press; }
+  .badge-ok { @apply bg-ok-bg text-ok; }
+  .badge-warn { @apply bg-warn-bg text-warn; }
+  .badge-danger { @apply bg-danger-bg text-danger; }
+  .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold; }
+}
+
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.anim-sheet { animation: sheet-up .25s cubic-bezier(.2,.8,.2,1); }
+.anim-toast { animation: toast-in .2s ease-out; }
+.anim-fade { animation: fade-in .2s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-sheet, .anim-toast, .anim-fade { animation: none; }
+}
