@@ -6,6 +6,7 @@ import { Loading } from '@/components/EmptyState';
 import { ensureHouse } from '@/db/repo';
 import { db } from '@/db/db';
 import { setReturningUser } from '@/lib/whatsnew';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { Home } from '@/pages/Home';
 import { Materials } from '@/pages/Materials';
 import { MaterialForm } from '@/pages/MaterialForm';
@@ -13,6 +14,7 @@ import { MaterialDetail } from '@/pages/MaterialDetail';
 import { HouseSettings } from '@/pages/HouseSettings';
 import { TemplatePicker } from '@/pages/TemplatePicker';
 import { Guide } from '@/pages/Guide';
+import { Backup } from '@/pages/Backup';
 import { Repairs } from '@/pages/Repairs';
 import { RepairForm } from '@/pages/RepairForm';
 import { RepairDetail } from '@/pages/RepairDetail';
@@ -29,6 +31,10 @@ export default function App() {
       setReady(true);
     })();
   }, []);
+  useEffect(() => {
+    // 앱은 밝은 화면이므로 휴대폰이 다크 모드여도 상태 표시줄·하단 바 아이콘을 어두운색으로
+    if (Capacitor.isNativePlatform()) void SystemBars.setStyle({ style: SystemBarsStyle.Light }).catch(() => undefined);
+  }, []);
   if (!ready) return <Loading />;
   // Capacitor(file://) 환경에서도 새로고침이 깨지지 않도록 HashRouter 사용
   return (
@@ -44,6 +50,7 @@ export default function App() {
             <Route path="materials/:id/edit" element={<MaterialForm />} />
             <Route path="house" element={<HouseSettings />} />
             <Route path="guide" element={<Guide />} />
+            <Route path="backup" element={<Backup />} />
             <Route path="repairs" element={<Repairs />} />
             <Route path="repairs/new" element={<RepairForm />} />
             <Route path="repairs/:id" element={<RepairDetail />} />

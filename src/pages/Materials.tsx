@@ -6,7 +6,6 @@ import { MATERIAL_CATEGORIES, type MaterialItem } from '@/db/types';
 import { STANDARD_TEMPLATE } from '@/db/template';
 import { listMaterials } from '@/db/repo';
 import { dueInfo, dueLabel } from '@/lib/dates';
-import { STATUS_CLASS, STATUS_LABEL } from '@/lib/status';
 import { PageHeader } from '@/components/PageHeader';
 import { EmptyState, Loading } from '@/components/EmptyState';
 import { PhotoImg } from '@/components/Photo';
@@ -14,21 +13,26 @@ import { Icon } from '@/components/Icon';
 import { inputCls } from '@/components/Field';
 import { useToast } from '@/components/Toast';
 
-type StatusFilter = 'all' | 'need' | 'UNKNOWN' | 'PARTIAL' | 'VERIFIED' | 'due';
+type StatusFilter = 'all' | 'has' | 'empty' | 'due';
 const STATUS_CHIPS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'need', label: '확인 필요' },
-  { key: 'UNKNOWN', label: '미확인' },
-  { key: 'PARTIAL', label: '일부확인' },
-  { key: 'VERIFIED', label: '확인완료' },
+  { key: 'has', label: '정보 있음' },
+  { key: 'empty', label: '정보 없음' },
   { key: 'due', label: '교체 임박' },
 ];
 
 function matchStatus(m: MaterialItem, f: StatusFilter): boolean {
   if (f === 'all') return true;
-  if (f === 'need') return m.status !== 'VERIFIED';
-  if (f === 'due') { const s = dueInfo(m.lastMaintainedDate, m.maintenanceCycleMonths).state; return s === 'overdue' || s === 'soon'; }
-  return m.status === f;
+  if (f === 'has') return m.status !== 'UNKNOWN';
+  if (f === 'empty') return m.status === 'UNKNOWN';
+  const s = dueInfo(m.lastMaintainedDate, m.maintenanceCycleMonths).state; return s === 'overdue' || s === 'soon';
+}
+
+/** 예전 링크(status=need 등)도 새 필터로 이어지게 */
+function readFilter(v: string | null): StatusFilter {
+  if (v === 'need' || v === 'UNKNOWN') return 'empty';
+  if (v === 'PARTIAL' || v === 'VERIFIED') return 'has';
+  return v === 'has' || v === 'empty' || v === 'due' ? v : 'all';
 }
 
 export function Materials() {
@@ -36,7 +40,7 @@ export function Materials() {
   const [sp, setSp] = useSearchParams();
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
-  const status = (sp.get('status') as StatusFilter) || 'all';
+  const status = readFilter(sp.get('status'));
   const room = sp.get('room') || '';
 
   const items = useLiveQuery(() => listMaterials(), []);
@@ -101,10 +105,9 @@ export function Materials() {
     );
   }
 
-  const need = items.filter((m) => m.status !== 'VERIFIED').length;
   return (
     <>
-      <PageHeader title="자재관리" sub={`전체 ${items.length}개 · 확인 필요 ${need}개`} />
+      <PageHeader title="자재관리" sub={`전체 ${items.length}개`} />
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs text-ink-sub">{pick ? `${sel.size}개 선택됨 · 카드를 눌러 고르세요` : '우리 집에 없는 자재는 선택해서 한 번에 지울 수 있어요'}</span>
         <button className={`chip shrink-0 ${pick ? 'chip-on' : ''}`} onClick={() => (pick ? exitPick() : setPick(true))}>{pick ? '선택 끝내기' : '선택해서 지우기'}</button>
@@ -146,7 +149,6 @@ export function Materials() {
                     <div className="truncate text-[15px] font-bold">{m.name}</div>
                     <div className="truncate text-xs text-ink-sub">{[m.roomName, m.brand, m.modelName].filter(Boolean).join(' · ')}</div>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <span className={`badge ${STATUS_CLASS[m.status]}`}>{STATUS_LABEL[m.status]}</span>
                       {(due.state === 'overdue' || due.state === 'soon') && <span className="badge badge-warn">{dueLabel(due)}</span>}
                     </div>
                   </div>
@@ -161,7 +163,6 @@ export function Materials() {
                     <div className="truncate text-[15px] font-bold">{m.name}</div>
                     <div className="truncate text-xs text-ink-sub">{[m.roomName, m.brand, m.modelName].filter(Boolean).join(' · ')}</div>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <span className={`badge ${STATUS_CLASS[m.status]}`}>{STATUS_LABEL[m.status]}</span>
                       {(due.state === 'overdue' || due.state === 'soon') && <span className="badge badge-warn">{dueLabel(due)}</span>}
                     </div>
                   </div>
@@ -174,6 +175,7 @@ export function Materials() {
         </ul>
       )}
 
+      <div aria-hidden style={{ height: 96 }} />
       {pick ? (
         <div className="fixed inset-x-0 z-30 mx-auto max-w-[480px] px-4" style={{ bottom: 'calc(92px + var(--safe-bottom))' }}>
           <div className="card-3d flex flex-col gap-2 p-3">

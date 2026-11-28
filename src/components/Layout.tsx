@@ -11,6 +11,7 @@ import { LATEST, RELEASES, type Release } from '@/data/releases';
 import { planAppUpdate, runAppUpdate, type UpdatePlan } from '@/lib/appUpdate';
 import { decideWhatsNew, getSeen, getSeenBuild, isReturningUser, markSeen, sinceBuild } from '@/lib/whatsnew';
 import { decideBack, popBack, TAB_ROUTES } from '@/lib/back';
+import { useKeyboardOpen } from '@/lib/useKeyboardOpen';
 
 const SWIPE_DISTANCE = 70;
 
@@ -18,6 +19,7 @@ export function Layout() {
   const loc = useLocation();
   const nav = useNavigate();
   const toast = useToast();
+  const kb = useKeyboardOpen();
   const [sheet, setSheet] = useState(false);
   const [notes, setNotes] = useState<Release | null>(null);
   const [intro, setIntro] = useState(false);
@@ -115,13 +117,13 @@ export function Layout() {
   const anim = dir === 'l' ? 'anim-slide-l' : dir === 'r' ? 'anim-slide-r' : 'anim-fade';
   return (
     <div className="mx-auto min-h-full max-w-[480px] bg-bg">
-      <main className="px-4" style={{ paddingTop: 'calc(16px + var(--safe-top))', paddingBottom: 'calc(112px + var(--safe-bottom))', touchAction: swipeable ? 'pan-y' : undefined }}
+      <main className="px-4" style={{ paddingTop: 'calc(16px + var(--safe-top))', paddingBottom: kb ? '24px' : 'calc(112px + var(--safe-bottom))', touchAction: swipeable ? 'pan-y' : undefined }}
         onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
         <div ref={wrap} key={loc.pathname} className={anim} style={{ minHeight: '60vh' }}>
           <Outlet />
         </div>
       </main>
-      <BottomNav onQuickAdd={() => setSheet(true)} />
+      {!kb && <BottomNav onQuickAdd={() => setSheet(true)} />}
       <QuickAddSheet open={sheet} onClose={() => setSheet(false)} />
       {update && <WhatsNewSheet mode="update" release={update.release ?? generic} onClose={() => setUpdate(null)} onConfirm={confirmUpdate} />}
       {!update && notes && <WhatsNewSheet release={notes} onClose={closeNotes} />}

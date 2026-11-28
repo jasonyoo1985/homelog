@@ -8,16 +8,18 @@ import { deriveStatus } from '@/lib/status';
 import { BackHeader } from '@/components/BackHeader';
 import { Field, TextInput, inputCls } from '@/components/Field';
 import { PhotoPicker } from '@/components/PhotoPicker';
+import { CatalogPicker } from '@/components/CatalogPicker';
+import type { Prefill } from '@/lib/catalog';
 import { EmptyState, Loading } from '@/components/EmptyState';
 import { useToast } from '@/components/Toast';
 
 interface Form {
   name: string; roomName: string; category: MaterialCategory; brand: string; modelName: string; spec: string;
   installedDate: string; warrantyEndDate: string; customerCenter: string; purchaseUrlOrNote: string;
-  cycle: string; lastMaintainedDate: string; photos: StoredPhoto[];
+  cycle: string; lastMaintainedDate: string; photos: StoredPhoto[]; price: string; note: string;
 }
 const empty: Form = { name: '', roomName: '', category: '기타', brand: '', modelName: '', spec: '', installedDate: '', warrantyEndDate: '',
-  customerCenter: '', purchaseUrlOrNote: '', cycle: '', lastMaintainedDate: '', photos: [] };
+  customerCenter: '', purchaseUrlOrNote: '', cycle: '', lastMaintainedDate: '', photos: [], price: '', note: '' };
 
 export function MaterialForm() {
   const { id } = useParams();
@@ -38,6 +40,7 @@ export function MaterialForm() {
       spec: existing.spec ?? '', installedDate: existing.installedDate ?? '', warrantyEndDate: existing.warrantyEndDate ?? '',
       customerCenter: existing.customerCenter ?? '', purchaseUrlOrNote: existing.purchaseUrlOrNote ?? '',
       cycle: existing.maintenanceCycleMonths ? String(existing.maintenanceCycleMonths) : '', lastMaintainedDate: existing.lastMaintainedDate ?? '', photos: existing.photos,
+      price: existing.purchasePrice ? String(existing.purchasePrice) : '', note: '',
     });
     setMore(true);
   }, [existing]);
@@ -45,6 +48,7 @@ export function MaterialForm() {
   if (!house || (id && existing === undefined)) return <Loading />;
   if (id && existing === null) return (<><BackHeader title="자재 수정" to="/materials" /><EmptyState title="자재를 찾을 수 없어요" /></>);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
+  const applyPrefill = (p: Prefill) => { setF((prev) => ({ ...prev, name: p.name, roomName: p.roomName, category: p.category, brand: p.brand, modelName: p.modelName, spec: p.spec, note: p.note })); setMore(true); };
   const rooms = house.rooms;
   const valid = f.name.trim() && f.roomName.trim();
 
@@ -54,12 +58,14 @@ export function MaterialForm() {
     try {
       const h = await ensureHouse();
       const now = Date.now();
-      const cycle = Number(f.cycle);
+      const cycle = Math.min(Number(f.cycle), 600); // 비정상적으로 큰 값 방지
       const base = {
         houseId: h.id, roomName: f.roomName.trim(), category: f.category, name: f.name.trim(),
         brand: f.brand.trim() || undefined, modelName: f.modelName.trim() || undefined, spec: f.spec.trim() || undefined,
         installedDate: f.installedDate || undefined, warrantyEndDate: f.warrantyEndDate || undefined,
         customerCenter: f.customerCenter.trim() || undefined, purchaseUrlOrNote: f.purchaseUrlOrNote.trim() || undefined,
+        purchasePrice: Number(f.price) > 0 ? Math.round(Number(f.price)) : undefined,
+        ...(!existing && f.note ? { discoveryNotes: f.note } : {}),
         maintenanceCycleMonths: cycle > 0 ? Math.round(cycle) : undefined, lastMaintainedDate: f.lastMaintainedDate || undefined, photos: f.photos,
       };
       const status = deriveStatus(base);
@@ -84,6 +90,7 @@ export function MaterialForm() {
     <>
       <BackHeader title={existing ? '자재 수정' : '자재 등록'} />
       <div className="flex flex-col gap-4">
+        {!existing && <CatalogPicker rooms={house.rooms} onPick={applyPrefill} />}
         <section>
           <h2 className="mb-2 text-sm font-bold">사진 <span className="font-normal text-ink-sub">· 제품 라벨(모델명)을 함께 찍어두면 좋아요</span></h2>
           <PhotoPicker photos={f.photos} onChange={(p) => set('photos', p)} />
@@ -122,13 +129,14 @@ export function MaterialForm() {
             </div>
             <Field label="A/S·고객센터 메모" hint="직접 확인한 연락처만 적어 주세요."><TextInput value={f.customerCenter} onChange={(e) => set('customerCenter', e.target.value)} /></Field>
             <Field label="구매처/링크 메모"><TextInput value={f.purchaseUrlOrNote} onChange={(e) => set('purchaseUrlOrNote', e.target.value)} /></Field>
-            <Field label="교체·점검 주기 (개월)">
+            <Field label="구입가·계약금액 (원)"><TextInput inputMode="numeric" value={f.price} onChange={(e) => set('price', e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="0" /></Field>
+            <Field label="교체·점검 주기 (개월)" hint="필터·건전지처럼 주기가 있는 것만 적으면 돼요. 최대 600개월.">
               <div className="flex gap-2">
                 {[3, 6, 12, 24].map((n) => (
                   <button key={n} type="button" className={`chip ${f.cycle === String(n) ? 'chip-on' : ''}`} onClick={() => set('cycle', f.cycle === String(n) ? '' : String(n))}>{n}개월</button>
                 ))}
               </div>
-              <TextInput className="mt-2" inputMode="numeric" value={f.cycle} onChange={(e) => set('cycle', e.target.value.replace(/\D/g, ''))} placeholder="직접 입력" />
+              <TextInput className="mt-2" inputMode="numeric" value={f.cycle} onChange={(e) => set('cycle', e.target.value.replace(/\D/g, '').slice(0, 3))} placeholder="직접 입력" />
             </Field>
             <Field label="마지막 교체·점검일"><TextInput type="date" value={f.lastMaintainedDate} onChange={(e) => set('lastMaintainedDate', e.target.value)} /></Field>
           </div>

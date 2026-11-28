@@ -23,11 +23,9 @@ export function Home() {
     }
     return {
       total: materials.length,
-      need: materials.filter((m) => m.status !== 'VERIFIED').length,
       due: alerts.filter((a) => !a.id.endsWith('-w')).length,
       progress: repairs.filter((r) => r.stage !== 'DONE').length,
       alerts: alerts.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'danger' ? -1 : 1)).slice(0, 4),
-      todo: materials.filter((m) => m.status === 'UNKNOWN').slice(0, 3),
     };
   }, []);
   const house = useLiveQuery(() => db.houses.toCollection().first(), []);
@@ -35,8 +33,8 @@ export function Home() {
   if (!data) return <Loading />;
   const cards = [
     { label: '전체 자재', value: data.total, to: '/materials', icon: 'box' as const, cls: 'text-primary bg-primary-100' },
-    { label: '확인 필요', value: data.need, to: '/materials?status=need', icon: 'alert' as const, cls: 'text-danger bg-danger-bg' },
     { label: '교체 임박', value: data.due, to: '/materials?status=due', icon: 'calendar' as const, cls: 'text-warn bg-warn-bg' },
+    { label: '진행 중 수리', value: data.progress, to: '/repairs', icon: 'wrench' as const, cls: 'text-primary bg-primary-100' },
   ];
   const tone = { danger: 'badge-danger', warn: 'badge-warn', info: 'badge-ok' } as const;
 
@@ -55,7 +53,7 @@ export function Home() {
         <p className="text-sm text-white/70">{house?.name ?? '우리 집'}{house?.housingType ? ` · ${house.housingType}` : ''}</p>
         <h2 className="mt-1 text-[22px] font-extrabold leading-snug">우리 집,<br />지금도 안전한가요?</h2>
         <p className="mt-2 text-xs text-white/70">
-          {data.total === 0 ? '표준 자재를 만들어 시작해 보세요' : data.need === 0 ? '모든 자재 정보가 확인되었어요' : `확인이 필요한 자재 ${data.need}개`}
+          {data.total === 0 ? '자재를 기록해 두면 필요할 때 바로 찾을 수 있어요' : data.due > 0 ? `교체 시기가 다가온 자재 ${data.due}개` : '지금은 챙길 일이 없어요'}
         </p>
         <Link to="/materials" className="mt-4 inline-flex items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-navy shadow-card-press">
           자세히 보기 <Icon name="chevron" size={16} />
@@ -100,21 +98,6 @@ export function Home() {
         </section>
       )}
 
-      {data.todo.length > 0 && (
-        <section>
-          <h3 className="mb-3 text-base font-bold">이것부터 확인해 볼까요?</h3>
-          <ul className="flex flex-col gap-2">
-            {data.todo.map((m) => (
-              <li key={m.id}>
-                <Link to={`/materials/${m.id}`} className="card-3d-press flex items-center justify-between p-4">
-                  <span><span className="font-semibold">{m.name}</span><span className="ml-2 text-xs text-ink-sub">{m.roomName}</span></span>
-                  <Icon name="chevron" size={18} className="text-ink-sub" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }

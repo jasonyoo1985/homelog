@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/db';
 import type { HousingType } from '@/db/types';
@@ -81,6 +81,10 @@ export function HouseSettings() {
           <p className="mt-2 text-xs text-ink-sub">공간을 지워도 이미 등록한 자재는 그대로 유지돼요.</p>
         </div>
         <button className="btn-3d" onClick={save}>저장하기</button>
+        <Link to="/backup" className="card-3d-press flex items-center justify-between p-4">
+          <span><span className="block text-sm font-bold">가져오기 · 내보내기</span><span className="block text-xs text-ink-sub">백업 파일, 마감재 리스트, 자재 묶음을 불러오거나 저장해요</span></span>
+          <span className="text-primary">›</span>
+        </Link>
         <div className="card-3d flex items-center justify-between p-4">
           <div>
             <div className="text-sm font-bold">앱 버전 {__APP_VERSION__}</div>

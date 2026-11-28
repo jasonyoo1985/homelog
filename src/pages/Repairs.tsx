@@ -56,6 +56,7 @@ export function Repairs() {
               ))}
             </ul>
           )}
+          <div aria-hidden style={{ height: 96 }} />
           <div className="pointer-events-none fixed inset-x-0 z-30 mx-auto max-w-[480px] px-4" style={{ bottom: 'calc(92px + var(--safe-bottom))' }}>
             <button className="btn-3d pointer-events-auto w-full" onClick={() => nav('/repairs/new')}>+ 수리·하자 기록하기</button>
           </div>

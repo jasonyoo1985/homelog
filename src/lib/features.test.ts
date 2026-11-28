@@ -36,9 +36,12 @@ describe('집 건강 점수', () => {
       materials: [{ status: 'VERIFIED' }, { status: 'UNKNOWN', maintenanceCycleMonths: 3, lastMaintainedDate: '2025-01-01' }] as never,
       repairs: [{ stage: 'FOUND' }], checklistRatio: 0.5,
     }, '2026-06-01')!;
-    expect(h.parts).toEqual({ info: 20, care: 0, repair: 10, routine: 8 });
-    expect(h.score).toBe(38);
+    expect(h.parts).toEqual({ care: 0, repair: 20, routine: 15 });
+    expect(h.score).toBe(35);
     expect(h.label).toBe('챙겨볼 때예요');
+    // 정보를 안 채워도 점수에 영향이 없다
+    const full = computeHealth({ materials: [{ status: 'UNKNOWN' }, { status: 'UNKNOWN' }] as never, repairs: [], checklistRatio: 1 })!;
+    expect(full.score).toBe(100);
   });
 });
 
@@ -87,7 +90,7 @@ describe('백업/가져오기', () => {
   });
   it('자재 팩: 검증·중복 건너뛰기', async () => {
     const pack = { app: 'homelog', kind: 'pack', materials: [
-      { roomName: '주방', category: '주방설비', name: '식기세척기', modelName: 'DIB22S', purchasePrice: 1200000 },
+      { roomName: '주방', category: '주방설비', name: '식기세척기', modelName: 'DIB22S', purchasePrice: 1200000, memo: '메모 테스트' },
       { roomName: '주방', category: '주방설비', name: '식기세척기' },
       { roomName: '', name: 'x' }, { name: 'y' },
     ] };
@@ -95,7 +98,7 @@ describe('백업/가져오기', () => {
     expect(items).toHaveLength(2);
     expect(await importPack('h9', items)).toBe(1);
     const m = (await db.materials.toArray())[0];
-    expect(m.modelName).toBe('DIB22S'); expect(m.purchasePrice).toBe(1200000);
+    expect(m.modelName).toBe('DIB22S'); expect(m.purchasePrice).toBe(1200000); expect(m.discoveryNotes).toBe('메모 테스트');
     expect(parsePack({ app: 'homelog', kind: 'backup' })).toBeNull();
   });
 });

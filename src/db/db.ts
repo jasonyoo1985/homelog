@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type {
+  CatalogEntry,
   ChecklistDone,
   ContactItem,
   InspectionItem,
@@ -21,6 +22,7 @@ export class HomelogDB extends Dexie {
   settings!: EntityTable<Setting, 'key'>;
   contacts!: EntityTable<ContactItem, 'id'>;
   inspections!: EntityTable<InspectionItem, 'id'>;
+  catalog!: EntityTable<CatalogEntry, 'id'>;
 
   constructor(name = 'homelog') {
     super(name);
@@ -37,6 +39,7 @@ export class HomelogDB extends Dexie {
       contacts: 'id, houseId, category, updatedAt',
       inspections: 'id, houseId, state',
     });
+    this.version(3).stores({ catalog: 'id, item, category' });
   }
 }
 

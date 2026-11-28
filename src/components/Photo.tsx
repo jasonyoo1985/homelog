@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { StoredPhoto } from '@/db/types';
 
-function useObjectUrl(blob: Blob | undefined): string | undefined {
+export function useObjectUrl(blob: Blob | undefined): string | undefined {
   const [url, setUrl] = useState<string>();
   useEffect(() => {
     if (!blob) { setUrl(undefined); return; }

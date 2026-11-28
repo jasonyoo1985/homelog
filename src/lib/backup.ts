@@ -77,6 +77,8 @@ export function backupFilename(d = new Date()): string {
 export interface PackItem {
   roomName: string; category: MaterialCategory; name: string; brand?: string; modelName?: string; spec?: string;
   customerCenter?: string; purchaseUrlOrNote?: string; purchasePrice?: number; maintenanceCycleMonths?: number; installedDate?: string;
+  /** 메모(상세 화면의 메모 카드로 표시) */
+  memo?: string;
 }
 export interface PackFile { app: 'homelog'; kind: 'pack'; title?: string; materials: PackItem[] }
 
@@ -92,7 +94,7 @@ export function parsePack(x: unknown): PackItem[] | null {
     const price = Number(m.purchasePrice), cycle = Number(m.maintenanceCycleMonths);
     out.push({
       roomName, category: cat, name, brand: str(m.brand, 60), modelName: str(m.modelName, 80), spec: str(m.spec), customerCenter: str(m.customerCenter, 400),
-      purchaseUrlOrNote: str(m.purchaseUrlOrNote, 400), purchasePrice: price > 0 ? Math.round(price) : undefined,
+      purchaseUrlOrNote: str(m.purchaseUrlOrNote, 400), memo: str(m.memo, 800), purchasePrice: price > 0 ? Math.round(price) : undefined,
       maintenanceCycleMonths: cycle > 0 ? Math.round(cycle) : undefined, installedDate: /^\d{4}-\d{2}-\d{2}$/.test(String(m.installedDate)) ? String(m.installedDate) : undefined,
     });
   }
@@ -107,7 +109,8 @@ export async function importPack(houseId: string, items: PackItem[], now = Date.
     const key = `${it.roomName}|${it.name}`;
     if (have.has(key)) continue;
     have.add(key); // 같은 팩 안의 중복도 한 번만
-    const base = { ...it, houseId, photos: [] as StoredPhoto[] };
+    const { memo, ...rest } = it;
+    const base = { ...rest, discoveryNotes: memo, houseId, photos: [] as StoredPhoto[] };
     rows.push({ ...base, id: uid(), status: deriveStatus(base), createdAt: now, updatedAt: now });
   }
   if (rows.length) await db.materials.bulkAdd(rows);

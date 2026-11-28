@@ -154,3 +154,24 @@ export interface Setting {
   key: string;
   value: unknown;
 }
+
+/** 마감재 카탈로그 한 줄 (입주 단지의 마감재 리스트를 불러와 '품목 → 제품'으로 고를 때 사용) */
+export interface CatalogEntry {
+  id: string;
+  /** 품목: 강마루, 바닥 타일, 아트월, 조명 등 사용자가 먼저 고르는 분류 */
+  item: string;
+  category: MaterialCategory;
+  /** 실명(공간): 거실, 주방/식당, 욕실1, 침실2,3 ... */
+  space: string;
+  /** 기본·확장형 / 확장형 유상옵션1 ... */
+  variant: string;
+  /** 공종 설명 (예: 건축(단위세대 바닥마감 옵션)) */
+  trade: string;
+  /** 자재명 */
+  name: string;
+  /** 모델명 */
+  model: string;
+  /** 업체명(공급사) */
+  maker: string;
+  page?: number;
+}

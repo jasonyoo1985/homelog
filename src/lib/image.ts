@@ -28,28 +28,36 @@ async function render(bitmap: ImageBitmap, edge: number): Promise<{ canvas: HTML
   return { canvas, width, height };
 }
 
-/** WebP 우선(미지원 시 JPEG)으로 품질을 낮춰가며 목표 용량(300KB) 이하를 맞춘다. */
-async function encode(canvas: HTMLCanvasElement, maxBytes: number): Promise<Blob> {
-  let quality = 0.82;
-  let blob: Blob | null = null;
-  for (let i = 0; i < 5; i++) {
-    blob = (await canvasToBlob(canvas, 'image/webp', quality)) ?? (await canvasToBlob(canvas, 'image/jpeg', quality));
-    if (!blob) throw new Error('이미지 인코딩 실패');
-    if (blob.size <= maxBytes) break;
-    quality -= 0.12;
+export type PhotoProfile = 'label' | 'normal';
+/** label: 제품 라벨·시리얼 번호가 읽히는 정도로 작게(약 150KB) / normal: 기존 품질(약 300KB) */
+export const PROFILES: Record<PhotoProfile, { maxEdge: number; maxBytes: number }> = {
+  label: { maxEdge: 1000, maxBytes: 150 * 1024 },
+  normal: { maxEdge: MAX_EDGE, maxBytes: TARGET_MAX_BYTES },
+};
+
+/** WebP 우선(미지원 시 JPEG). 목표 용량 이하가 될 때까지 품질을 낮추고, 그래도 크면 크기를 줄인다 */
+async function encode(bitmap: ImageBitmap, edge: number, maxBytes: number): Promise<{ blob: Blob; width: number; height: number }> {
+  let last: { blob: Blob; width: number; height: number } | null = null;
+  for (const scale of [1, 0.8, 0.65]) {
+    const { canvas, width, height } = await render(bitmap, Math.round(edge * scale));
+    for (const q of [0.72, 0.58, 0.45]) {
+      const blob = (await canvasToBlob(canvas, 'image/webp', q)) ?? (await canvasToBlob(canvas, 'image/jpeg', q));
+      if (!blob) throw new Error('이미지 인코딩 실패');
+      last = { blob, width, height };
+      if (blob.size <= maxBytes) return last;
+    }
   }
-  return blob as Blob;
+  return last as { blob: Blob; width: number; height: number };
 }
 
-/** 사진 파일 → 1200px WebP(≤~300KB) + 300px 썸네일. EXIF 회전은 createImageBitmap이 반영. */
-export async function compressImage(file: Blob): Promise<StoredPhoto> {
+/** 사진 파일 → 프로필에 맞춰 압축 + 목록용 썸네일. EXIF 회전은 createImageBitmap이 반영. */
+export async function compressImage(file: Blob, profile: PhotoProfile = 'normal'): Promise<StoredPhoto> {
+  const { maxEdge, maxBytes } = PROFILES[profile];
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   try {
-    const main = await render(bitmap, MAX_EDGE);
-    const blob = await encode(main.canvas, TARGET_MAX_BYTES);
-    const th = await render(bitmap, THUMB_EDGE);
-    const thumb = await encode(th.canvas, 40 * 1024);
-    return { id: uid(), blob, thumb, width: main.width, height: main.height, createdAt: Date.now() };
+    const main = await encode(bitmap, maxEdge, maxBytes);
+    const thumb = await encode(bitmap, THUMB_EDGE, 40 * 1024);
+    return { id: uid(), blob: main.blob, thumb: thumb.blob, width: main.width, height: main.height, createdAt: Date.now() };
   } finally {
     bitmap.close();
   }
