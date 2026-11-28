@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { entriesOfItem, itemOptions, norm, parseCatalog, prefillFromEntry, roomFor } from './catalog';
+import { BUNDLED_CATALOG_VERSION, categoryCounts, entriesOfItem, itemOptions, norm, parseCatalog, prefillFromEntry, roomFor, seedCatalog } from './catalog';
+import { db } from '@/db/db';
 import type { CatalogEntry } from '@/db/types';
 
 const E = (o: Partial<CatalogEntry>): CatalogEntry => ({ id: 'x', item: '강마루', category: '바닥재/마루/타일', space: '거실', variant: '기본·확장형', trade: '건축', name: '광폭 하이브리드 강마루(115*800)', model: 'SERA DL-HYBRID NORDIC ASH(세라 디엘 하이브리드 노르딕 애쉬)', maker: '이건마루', ...o });
@@ -41,5 +42,27 @@ describe('catalog', () => {
     expect(r.entries[1].category).toBe('기타');
     expect(parseCatalog({ app: 'homelog', kind: 'pack', materials: [] })).toBeNull();
     expect(parseCatalog(null)).toBeNull();
+  });
+});
+
+describe('내장 카탈로그', () => {
+  it('앱 시작 시 내장 리스트(200개)를 채우고, 같은 버전이면 다시 채우지 않는다', async () => {
+    localStorage.removeItem('homelog.catalog.seed');
+    await db.catalog.clear();
+    expect(await seedCatalog()).toBe(200);
+    expect(await db.catalog.count()).toBe(200);
+    await db.catalog.clear(); // 사용자가 지운 경우
+    expect(await seedCatalog()).toBe(0);
+    expect(await db.catalog.count()).toBe(0);
+    expect(localStorage.getItem('homelog.catalog.seed')).toBe(BUNDLED_CATALOG_VERSION);
+  });
+  it('카테고리를 고르면 그 카테고리의 품목만 나온다', async () => {
+    localStorage.removeItem('homelog.catalog.seed'); await db.catalog.clear(); await seedCatalog();
+    const all = await db.catalog.toArray();
+    const air = itemOptions(all, '', '에어컨/냉난방').map((o) => o.item);
+    expect(air).toEqual(expect.arrayContaining(['시스템에어컨', '온도조절기', '씰링팬']));
+    expect(air).not.toContain('강마루');
+    expect(itemOptions(all).length).toBe(41);
+    expect(categoryCounts(all).get('에어컨/냉난방')).toBe(4);
   });
 });

@@ -109,7 +109,7 @@ export function Materials() {
     <>
       <PageHeader title="자재관리" sub={`전체 ${items.length}개`} />
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-xs text-ink-sub">{pick ? `${sel.size}개 선택됨 · 카드를 눌러 고르세요` : '우리 집에 없는 자재는 선택해서 한 번에 지울 수 있어요'}</span>
+        <span className="min-w-0 flex-1 text-xs text-ink-sub">{pick ? `${sel.size}개 선택됨 · 카드를 눌러 고르세요` : '없는 자재는 한 번에 지울 수 있어요'}</span>
         <button className={`chip shrink-0 ${pick ? 'chip-on' : ''}`} onClick={() => (pick ? exitPick() : setPick(true))}>{pick ? '선택 끝내기' : '선택해서 지우기'}</button>
       </div>
       <div className="relative mb-3">

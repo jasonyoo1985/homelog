@@ -6,6 +6,7 @@ import { Loading } from '@/components/EmptyState';
 import { ensureHouse } from '@/db/repo';
 import { db } from '@/db/db';
 import { setReturningUser } from '@/lib/whatsnew';
+import { seedCatalog } from '@/lib/catalog';
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { Home } from '@/pages/Home';
 import { Materials } from '@/pages/Materials';
@@ -28,6 +29,7 @@ export default function App() {
       // 집 프로필을 만들기 전에 '이전에 실행한 적 있는 기기'인지 기록 (업데이트 안내 판단용)
       try { setReturningUser((await db.houses.count()) > 0); } catch { /* 무시 */ }
       await ensureHouse().catch(() => undefined);
+      await seedCatalog().catch(() => undefined);
       setReady(true);
     })();
   }, []);

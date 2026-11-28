@@ -90,13 +90,13 @@ export function MaterialForm() {
     <>
       <BackHeader title={existing ? '자재 수정' : '자재 등록'} />
       <div className="flex flex-col gap-4">
-        {!existing && <CatalogPicker rooms={house.rooms} onPick={applyPrefill} />}
+        {!existing && <CatalogPicker rooms={house.rooms} category={f.category} onCategory={(c) => set('category', c)} onPick={applyPrefill} onManual={() => document.getElementById('f-name')?.focus()} />}
         <section>
           <h2 className="mb-2 text-sm font-bold">사진 <span className="font-normal text-ink-sub">· 제품 라벨(모델명)을 함께 찍어두면 좋아요</span></h2>
           <PhotoPicker photos={f.photos} onChange={(p) => set('photos', p)} />
         </section>
         <div className="card-3d flex flex-col gap-4 p-4">
-          <Field label="자재명" required><TextInput value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="예) 거실 마루" /></Field>
+          <Field label="자재명" required><TextInput id="f-name" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="예) 거실 마루" /></Field>
           <Field label="공간" required>
             {customRoom ? (
               <TextInput value={f.roomName} onChange={(e) => set('roomName', e.target.value)} placeholder="공간 이름 입력" autoFocus />
@@ -109,12 +109,12 @@ export function MaterialForm() {
               </select>
             )}
           </Field>
-          <Field label="카테고리">
+          {existing && (<Field label="카테고리">
             <select className={inputCls} value={f.category} onChange={(e) => set('category', e.target.value as MaterialCategory)}>
               {MATERIAL_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
             </select>
-          </Field>
-          <p className="text-xs text-ink-sub">모르는 정보는 비워두세요. 나중에 채우면 상태가 자동으로 바뀌어요.</p>
+          </Field>)}
+          <p className="text-xs text-ink-sub">모르는 정보는 비워두세요. 적은 정보만 저장돼요.</p>
         </div>
 
         <button type="button" className="btn-soft" onClick={() => setMore((v) => !v)}>{more ? '상세 정보 접기' : '아는 정보 더 입력하기 (선택)'}</button>

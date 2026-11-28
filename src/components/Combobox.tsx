@@ -17,10 +17,13 @@ interface Props {
   disabled?: boolean;
   emptyText?: string;
   hint?: string;
+  /** 목록 맨 위에 보여줄 '직접 입력' 줄. 누르면 onManual 실행 */
+  manualLabel?: string;
+  onManual?: () => void;
 }
 
 /** 검색이 되는 드롭다운. 누르면 검색칸과 목록이 펼쳐지고, 고르면 닫힌다 */
-export function Combobox({ label, placeholder, selectedLabel, options, query, onQuery, onSelect, disabled, emptyText = '검색 결과가 없어요', hint }: Props) {
+export function Combobox({ label, placeholder, selectedLabel, options, query, onQuery, onSelect, disabled, emptyText = '검색 결과가 없어요', hint, manualLabel, onManual }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useBackClose(open, () => setOpen(false));
@@ -44,6 +47,11 @@ export function Combobox({ label, placeholder, selectedLabel, options, query, on
         <div className="mt-2 overflow-hidden rounded-2xl border border-line bg-white shadow-card" role="listbox" aria-label={label}>
           <input className="w-full border-b border-line px-4 py-3 text-[15px] outline-none" placeholder="검색 (이름·모델명·업체·공간)" value={query} onChange={(e) => onQuery(e.target.value)} />
           <ul className="max-h-64 overflow-y-auto" data-noswipe>
+            {manualLabel && onManual && (
+              <li>
+                <button type="button" className="block w-full px-4 py-3 text-left text-[15px] font-semibold text-primary active:bg-primary-50"
+                  onClick={() => { onManual(); setOpen(false); onQuery(''); }}>✏️ {manualLabel}</button>
+              </li>)}
             {options.length === 0 ? <li className="px-4 py-4 text-sm text-ink-sub">{emptyText}</li> : options.map((o) => (
               <li key={o.value}>
                 <button type="button" role="option" aria-selected={o.label === selectedLabel} className="block w-full border-t border-line px-4 py-3 text-left first:border-0 active:bg-primary-50"

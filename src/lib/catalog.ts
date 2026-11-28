@@ -1,5 +1,6 @@
 import { db } from '@/db/db';
 import { MATERIAL_CATEGORIES, type CatalogEntry, type MaterialCategory } from '@/db/types';
+import bundled from '@/data/catalog84B.json';
 
 export interface CatalogFile { app: 'homelog'; kind: 'catalog'; title?: string; source?: string; note?: string; items: unknown[] }
 
@@ -35,16 +36,43 @@ export async function replaceCatalog(entries: CatalogEntry[]): Promise<number> {
 /** 검색용으로 글자를 정리: 소문자, 공백·기호 제거 */
 export const norm = (s: string): string => s.toLowerCase().replace(/[\s()\[\]·,/_*\-]+/g, '');
 
+/** 앱에 내장된 마감재 리스트의 버전. 내용을 바꾸면 값을 바꿔서 폰에도 다시 반영되게 한다 */
+export const BUNDLED_CATALOG_VERSION = '84B-1';
+const SEED_KEY = 'homelog.catalog.seed';
+
+/**
+ * 앱에 내장된 마감재 리스트를 저장소에 채운다(파일 불러오기 없이 바로 쓰게).
+ * 같은 버전을 이미 채웠다면 다시 채우지 않는다(사용자가 지운 경우를 존중).
+ */
+export async function seedCatalog(): Promise<number> {
+  let done: string | null = null;
+  try { done = localStorage.getItem(SEED_KEY); } catch { /* 저장 불가 환경: 매번 채움 */ }
+  if (done === BUNDLED_CATALOG_VERSION) return 0;
+  const parsed = parseCatalog(bundled);
+  if (!parsed) return 0;
+  await replaceCatalog(parsed.entries);
+  try { localStorage.setItem(SEED_KEY, BUNDLED_CATALOG_VERSION); } catch { /* 무시 */ }
+  return parsed.entries.length;
+}
+
 export interface ItemOption { item: string; count: number }
 /** 품목 목록(가나다순)과 각 품목의 제품 수. query가 있으면 품목명 또는 그 안의 제품명·모델명이 맞는 품목만 */
-export function itemOptions(entries: CatalogEntry[], query = ''): ItemOption[] {
+export function itemOptions(entries: CatalogEntry[], query = '', category: MaterialCategory | '' = ''): ItemOption[] {
   const q = norm(query);
   const map = new Map<string, number>();
   for (const e of entries) {
+    if (category && e.category !== category) continue;
     if (q && !norm(`${e.item} ${e.name} ${e.model} ${e.maker}`).includes(q)) continue;
     map.set(e.item, (map.get(e.item) ?? 0) + 1);
   }
   return [...map.entries()].map(([item, count]) => ({ item, count })).sort((a, b) => a.item.localeCompare(b.item, 'ko'));
+}
+
+/** 카테고리별 제품 수 (선택 상자에 개수를 보여주기 위함) */
+export function categoryCounts(entries: CatalogEntry[]): Map<MaterialCategory, number> {
+  const m = new Map<MaterialCategory, number>();
+  for (const e of entries) m.set(e.category, (m.get(e.category) ?? 0) + 1);
+  return m;
 }
 
 /** 한 품목의 제품 목록. query로 이름·모델·업체·공간·옵션을 검색 */
